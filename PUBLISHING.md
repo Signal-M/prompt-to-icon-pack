@@ -1,103 +1,67 @@
-# GitHub publishing checklist
+# Publishing checklist
 
-## Recommended repository identity
+## Repository identity
 
-- Repository name: `prompt-to-icon-pack`
-- Display name: `Prompt to Icon Pack`
-- Tagline: `One prompt in. A consistent, named, transparent icon pack out.`
-- GitHub About description:
+- Repository: `m2290526022-boop/prompt-to-icon-pack`
+- Product display name: `Prompt to Asset Pack`
+- Tagline: `One prompt or character reference in. A coherent, named, transparent, QA-ready visual asset pack out.`
+- Suggested GitHub description:
 
 ```text
-Turn one prompt into a consistent, named, transparent icon pack. Codex skills for sheet-first generation, non-grid splitting, white-safe background removal, closed-loop QA, and production-ready PNG + ZIP export.
+Turn one prompt or IP reference into a coherent visual asset pack. Agent Skills for style-anchored generation, non-grid splitting, white-safe transparency, closed-loop QA, stickers, SVG, and production export.
 ```
 
 - Suggested topics:
 
 ```text
-codex-skill ai-icons icon-generator image-generation sprite-sheet
-background-removal computer-vision mini-program developer-tools design-tools
+agent-skills codex-plugin claude-code qwen-code ai-icons sticker-generator
+image-generation background-removal svg vectorization sprite-sheet design-tools
 ```
 
-## Before publishing
+## Before release
 
-1. Confirm the repository URL uses `m2290526022-boop/prompt-to-icon-pack`.
-2. Confirm the MIT license attribution. It currently uses `Xiaohao`.
-3. Review the demo sheet and confirm you are comfortable publishing it under the repository license.
-4. Search the repository for API keys, tokens, personal paths, email addresses, and generated cache files.
-5. Run `./scripts/validate.sh`.
-6. Decide whether the first public version is `v0.1.0` (recommended while interfaces may still change) or `v1.0.0`.
+1. Review all example assets and confirm redistribution rights.
+2. Search for keys, tokens, personal paths, email addresses, caches, and generated bundles.
+3. Run `PYTHON=<python-with-pillow-and-numpy> ./scripts/validate.sh`.
+4. Run the Codex plugin validator from `plugin-creator`.
+5. Confirm `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json`, and `qwen-extension.json` use the intended semantic version.
+6. Verify the old `generate-icon-batch` entry and `icons` schema still work.
+7. Review the SVG limitation language; never imply that complex traced art is clean hand-authored vector source.
 
-## Create the repository
+## Recommended next release
 
-Create an empty public repository on GitHub named `prompt-to-icon-pack`. Do not add a README, `.gitignore`, or license in the GitHub form because this directory already contains them.
+- Version: `v0.6.0`
+- Title: `v0.6.0 — From icon sheets to complete visual asset packs`
 
-Then run locally:
+Release highlights:
 
-```bash
-cd /path/to/prompt-to-icon-pack
-git init
-git add .
-git commit -m "feat: publish Prompt to Icon Pack"
-git branch -M main
-git remote add origin https://github.com/m2290526022-boop/prompt-to-icon-pack.git
-git push -u origin main
-```
-
-These commands publish externally. Review `git status` and `git diff --cached` before committing.
-
-## Configure the GitHub page
-
-1. Paste the recommended About description.
-2. Add all suggested topics.
-3. Set the website field only when a demo or documentation site exists.
-4. Enable Issues for bug reports and difficult test sheets.
-5. Consider enabling Discussions for prompts, examples, and feature ideas.
-6. Upload a social preview image showing “generated sheet → transparent named pack.”
-7. Pin the repository on your GitHub profile.
-
-## First release
-
-Create a `v0.1.0` release with:
-
-- the two skill folders;
-- the tested 3×3 example;
-- installation instructions;
-- a note that prompt-to-pack generation needs Codex ImageGen;
-- a note that macOS Vision OCR is optional and only used for captioned legacy sheets.
-
-Suggested release title:
-
-```text
-v0.1.0 — From one prompt to a QA-checked icon pack
-```
+- generic icons, emoji, stickers, avatars, badges, and item sprites;
+- 40–50+ asset planning with style anchors and density profiles;
+- preset UI, emoji, reaction, commerce, and sports collections;
+- character bible, identity QA, and reliable post-rendered sticker captions;
+- multi-size PNG/WebP, sprites, CSS, TypeScript, and ZIP export;
+- native/traced SVG with sanitization and render-back QA;
+- Codex, Claude Code, Qwen Code, WorkBuddy, and QwenWork packaging adapters;
+- backward compatibility with the original icon workflow.
 
 ## Launch copy
 
 ### Chinese
 
 ```text
-我开源了 Prompt to Icon Pack：一句 Prompt，生成整套风格一致、背景透明、自动命名的 Icon。
+Prompt to Icon Pack 升级成 Prompt to Asset Pack 了。
 
-它不是只负责“生成图”，而是把 Icon Sheet 生成、非网格拆分、背景透明化、中文命名、内部白色保护和闭环 QA 串成一条流水线。生成错误会重画，裁切错误会重拆，没通过 QA 就不会输出最终 ZIP。
+现在它不仅能生成 Icon，还能根据一张 IP 参考图批量生成表情包。大批量任务会先建立 Style Anchor，再拆成多张 Sheet，并通过跨批次 QA 检查角色身份、配色、比例、漏项和重复。
 
-适合小程序、App、游戏和 AI 编程项目。欢迎试用，也欢迎贡献难拆分的 Icon Sheet。
+它会自动拆图、保护内部白色、透明抠图、命名、添加可靠字幕，并导出 PNG、WebP、雪碧图、工程映射和可选 SVG。Codex、Claude Code、Qwen Code 和 WorkBuddy 共用一套 Agent Skills 核心。
 ```
 
 ### English
 
 ```text
-I open-sourced Prompt to Icon Pack: one prompt in, a consistent, named, transparent icon pack out.
+Prompt to Icon Pack has grown into Prompt to Asset Pack.
 
-It connects sheet-first generation, non-grid detection, white-safe background removal, semantic naming, and closed-loop QA. Generation mistakes are regenerated, extraction mistakes are re-split, and failed batches are never silently shipped.
+It now creates icons, emoji, character stickers, avatars, badges, and sprites from one prompt or reference. Large packs use style anchors and cross-batch QA; outputs can include transparent PNG/WebP, sprites, mappings, reliable sticker captions, and QA-validated SVG for eligible artwork.
 
-Built for apps, mini-programs, games, and AI coding workflows. Hard icon sheets and contributions are welcome.
+The same Agent Skills core ships with Codex, Claude Code, Qwen Code, WorkBuddy, and QwenWork adapters.
 ```
-
-## What earns trust and stars
-
-- Keep the real before/after demo near the top of the README.
-- Publish honest limitations instead of claiming perfect generation or guaranteed savings.
-- Add reproducible failure examples showing QA catching real defects.
-- Respond to the first few Issues quickly and turn hard sheets into regression fixtures.
-- Use small releases with clear notes instead of silently changing the skill contract.
-- Add screenshots or short clips before adding more marketing copy.

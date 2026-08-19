@@ -1,202 +1,181 @@
-# Prompt to Icon Pack
+# Prompt to Asset Pack
 
-> 一句 Prompt，生成整套风格一致、背景透明、自动命名的 Icon。
+> 一句 Prompt 或一张 IP 参考图，生成整套风格一致、自动命名、透明背景、经过 QA 的视觉资产。
 
-![Codex Skill](https://img.shields.io/badge/Codex-Skill-111111)
+![Agent Skills](https://img.shields.io/badge/Agent-Skills-111111)
+![Codex Plugin](https://img.shields.io/badge/Codex-Plugin-111111)
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB)
 ![License MIT](https://img.shields.io/badge/License-MIT-2EA44F)
 
-[English](README.md) · [安装](#安装) · [工作原理](#工作原理) · [已知限制](#已知限制)
+[English](README.md) · [安装](#安装) · [支持的资产](#不只是-icon) · [平台兼容](#agent-平台兼容)
 
-**Prompt to Icon Pack** 是一组面向 Codex 的 Icon 生产 Skills。它可以把自然语言需求转换成可直接用于小程序、App、游戏或 UI 项目的 Icon 包：先规划一张或多张 Icon Sheet，再进行非网格检测、背景透明化、外部语义命名、闭环 QA，最终输出透明 PNG、映射文件、TypeScript 常量和 ZIP。
+**Prompt to Asset Pack** 是从 `Prompt to Icon Pack` 升级而来的批量视觉资产生产流水线。它可以根据自然语言或角色参考图生成 Icon、Emoji、表情包、头像、徽章和游戏物品：先建立风格锚点并规划多张 Sheet，再进行非网格拆分、背景透明化、外部语义命名、单批与跨批 QA，最后输出 PNG、WebP、可选 SVG、工程映射和 ZIP。
 
-它解决的并不只是“生成图片”，而是 AI Icon 从想法到工程资产之间长期缺失的最后一公里。
+仓库名和 `$generate-icon-batch` 兼容入口会继续保留，避免旧提示词和安装方式失效。
 
 ## 实际效果
 
-| ImageGen 一次生成 | 自动拆分、透明化、命名后 |
+| 一次生成 | 自动拆分、透明化、命名和质检 |
 | --- | --- |
-| ![一次生成的 3x3 网球吉祥物 Icon Sheet](examples/tennis-mini-program/generated-sheet.png) | ![拆分后的透明 Icon 联系表](examples/tennis-mini-program/contact-sheet.png) |
+| ![3x3 网球吉祥物资产表](examples/tennis-mini-program/generated-sheet.png) | ![透明资产联系表](examples/tennis-mini-program/contact-sheet.png) |
 
-上面的 9 个 Icon 由一次 3×3 ImageGen 生成完成。首轮拆分发现“发布活动”的扩音器右侧留白不足，系统没有直接发布，而是通过局部 source-box 修正重新拆分；独立 QA 确认数量、语义、顺序、内部白色、透明度和命名全部通过后才生成最终 ZIP。
+这个真实示例第一次拆分时发现扩音器右侧留白不足。系统没有直接输出 ZIP，而是通过 QA 拦截、局部扩大裁剪框并重新验证，最终只包装通过门禁的结果。
 
-## 它缓解了什么问题？
+## 它解决什么问题
 
-### 1. 多次生成造成的风格不一致
-
-逐个生成时，模型很容易改变透视、角色比例、颜色、光照、线条粗细或材质。同一批 Icon 放到产品里，往往看起来像来自不同设计师。
-
-本项目采用 **sheet-first** 思路：让同一批 Icon 共享一份风格契约和同一张画布，更容易保持角色、尺寸、配色和渲染语言统一。
-
-### 2. 每个 Icon 分别生成的调用成本
-
-逐个生成意味着反复发送相似 Prompt、等待多个任务并逐个检查。项目会优先规划 4×4、3×4、3×3 等完整矩形批次，用更少的生成调用获得更多资产。实际费用取决于模型与服务商，因此项目不会承诺虚假的固定节省比例。
-
-### 3. 一次生成后的手动切图、抠图和命名
-
-传统流程通常还需要：画裁切框、去背景、修白边、检查是否截断、统一尺寸、逐个改名、整理映射、压缩打包。
-
-这些步骤现在由流水线自动完成，并且只有通过 QA 门禁才会输出最终包。
-
-| 工作方式 | 逐个生成 | 生成一张图后手动处理 | Prompt to Icon Pack |
-| --- | --- | --- | --- |
-| 视觉一致性 | 多次调用容易漂移 | 共享画布，通常更一致 | 统一风格契约 + sheet-first 批次 |
-| 生成调用 | 通常每个 Icon 至少一次 | 每张 Sheet 一次 | 每个完整矩形批次一次 |
-| 裁切与抠图 | 每张重复处理 | 手动 | 非网格自动检测 |
-| 命名 | 手动 | 手动或依赖 OCR | 绑定外部语义清单 |
-| 发布可信度 | 人工检查 | 通常没有正式门禁 | 确定性 QA + 独立视觉 QA |
+1. 单张生成容易出现配色、透视、材质和角色身份漂移。
+2. 每个资产分别调用模型会增加成本、等待时间和审核工作。
+3. 一张 Sheet 生成后仍需手动切图、抠图、命名、缩放和打包。
+4. 四五十个资产不适合挤在一张大图里，需要跨 Sheet 的一致性机制。
+5. “切出来了”不等于“可发布”，还可能有语义错误、重复、漏项、白色误删或角色变脸。
 
 ## 核心亮点
 
+### 四五十个资产也能保持一致
+
+大批量请求会共享一份不可变的 Style Contract 和参考锚点，再拆成多张完整布局：
+
+- `quality`：每张最多 9 个，适合 3D 角色和表情包；45 个会拆成 5 张 3×3。
+- `balanced`：每张最多 15 个，适合大多数 Icon 系统。
+- `economy`：每张最多 25 个，只适合简单扁平资产。
+
+系统会检查跨批次的角色身份、色板、主体比例、留白、线条或材质，以及是否有重复和漏项。失败时只重做问题批次。
+
+### 未指定内容时自动使用预设
+
+内置通用 UI 24/48、Emoji 反应、IP 表情、商店和运动主题。App 请求默认使用通用 UI；上传角色参考图则默认进入表情包模式，不会把所有模糊需求都武断地变成 Emoji。
+
 ### 不依赖严格网格
 
-AI 很少严格遵守像素级间距。拆分器不会把图片平均切成固定单元格，而是检测前景对象，再按视觉位置聚类为阅读顺序。
+拆分器检测真实前景对象并聚类成阅读顺序，不会把 AI 生成图简单平均切成固定小格。
 
-### 不会误删 Icon 内部白色
+### 不误删内部白色
 
-只移除与局部裁切边界连通的亮色中性背景。帽子、衣服、眼白、网球拍网线、播放按钮等被 Icon 包围的白色区域会保留为不透明。
+只移除与局部裁剪边界连通的亮色中性背景。眼白、衣服、帽子、网线、播放按钮和高光等内部白色仍保持不透明。
 
-### 命名来自需求，不来自图片猜测
+### 名称来自需求，而不是重新猜图
 
-外部的有序 Icon 清单才是名称真值。生成图中禁止出现标题、编号或文件名，也不会让 OCR 去重新猜一个生成前就已经知道的名称。
+有序资产清单是唯一命名真值。生成图中禁止出现标签和文件名，也不会让 OCR 猜一个生成前已经知道的名称。
 
-### 生成 QA 与拆分 QA 分开处理
+### QA 会诊断失败原因
 
-- 数量错误、语义不符、重复、漏项、顺序错误、风格漂移：重新生成该批次。
-- 裁切不全、相邻 Icon 合并、局部细节丢失、透明度异常：重新拆分或增加局部 override。
-- 三次仍未解决：标记 `needs_review`，不把有问题的结果包装成成功。
+- 生成、数量、语义、角色身份、重复或风格错误：重生成对应批次。
+- 检测、裁切、分离细节或透明度错误：重新拆分或局部修正。
+- 命名错误：修正外部映射。
+- SVG 过于复杂或回渲染不一致：保留 PNG/WebP。
 
-### 输出可以直接进入工程
+最终 ZIP 必须同时通过确定性 QA、视觉语义 QA 和全局跨批次 QA。
 
-除了 PNG，还会输出 `icon-map.json`、`icons.ts`、QA 摘要、透明棋盘格联系表和 ZIP。对于小程序或前端项目，不必再手写资产路径映射。
+### SVG 不是简单描摹一切
 
-### 两层 Skill，可组合使用
+扁平、线性、纯色 Icon 可以使用原生语义 SVG；颜色较少的位图可以选择 VTracer 描摹。SVG 会被清理主动内容、限制路径数量和文件体积，再回渲染成 PNG 与原图对比。3D、毛发、玻璃、柔和阴影和复杂渐变如果不适合矢量化，就诚实保留位图。
 
-- `generate-icon-batch`：从 Prompt 开始，负责需求理解、批次规划、生成、命名、语义 QA 和最终打包。
-- `split-icon-sheet`：负责已有图片的非网格拆分、局部背景去除、OCR Caption 支持和提取 QA。
+### 表情包文字不会再拼错
 
-已经有一张 Icon Sheet 时，可以只使用底层拆分 Skill。
+模型只负责生成无字角色。拆分后再用真实字体添加“收到”“谢谢”“冲鸭”等文字，既可靠，也能单独切换语言。
 
-## 工作原理
+## 不只是 Icon
 
-```mermaid
-flowchart LR
-    A["自然语言 Prompt"] --> B["有序 Icon 清单 + 风格契约"]
-    B --> C["完整矩形批次规划"]
-    C --> D["ImageGen 生成 Icon Sheet"]
-    D --> E["非网格前景检测"]
-    E --> F["边界连通背景去除"]
-    F --> G["按外部清单命名"]
-    G --> H["确定性 QA"]
-    H --> I["独立视觉 QA"]
-    I -->|通过| J["PNG + JSON + TypeScript + ZIP"]
-    H -->|裁切或透明度失败| E
-    I -->|语义、数量或风格失败| D
+```yaml
+asset_kind: icon | emoji | sticker | avatar | badge | item-sprite
+```
+
+仓库包含六个可组合 Skill：
+
+- `generate-asset-pack`：通用资产规划、预设、风格锚点、多 Sheet、QA 和打包。
+- `generate-sticker-pack`：Character Bible、反应清单、身份一致性和后置字幕。
+- `split-icon-sheet`：非网格拆分、旧图 OCR、内部白色保护和裁切 QA。
+- `vectorize-asset-pack`：原生/描摹 SVG、安全清理和回渲染 QA。
+- `export-asset-pack`：多尺寸 PNG/WebP、雪碧图、CSS、TypeScript 和 ZIP。
+- `generate-icon-batch`：兼容旧版 Icon 调用方式。
+
+## 使用示例
+
+```text
+使用 $generate-asset-pack，为网球小程序生成 48 个产品 Icon。
+采用统一的青柠绿色与黄色 3D 风格，balanced 密度，中文命名，
+输出透明 PNG 和 WebP，跨批次 QA 全部通过后再打包。
+```
+
+```text
+使用 $generate-sticker-pack 和我上传的小猫参考图。
+生成默认 24 个反应表情，保持脸型、耳朵、围巾和配色一致，
+拆分后添加可靠的中文文字，最后输出透明 ZIP。
 ```
 
 ## 安装
 
-克隆仓库后执行：
-
 ```bash
 git clone https://github.com/m2290526022-boop/prompt-to-icon-pack.git
 cd prompt-to-icon-pack
-./scripts/install.sh
+
+python3 scripts/install-platform.py codex
+python3 scripts/install-platform.py claude-code
+python3 scripts/install-platform.py qwen-code
+python3 scripts/install-platform.py workbuddy
 ```
 
-安装脚本会把两个 Skill 复制到 `~/.agents/skills`，发现已有同名目录时会停止，不会静默覆盖。
+`./scripts/install.sh` 仍然是 Codex 的快捷安装命令。默认不会覆盖已有 Skill，只有显式添加 `--force` 才会替换。
 
-也可以手动安装：
+生成千问办公可审查上传包：
 
 ```bash
-mkdir -p ~/.agents/skills
-cp -R skills/generate-icon-batch ~/.agents/skills/
-cp -R skills/split-icon-sheet ~/.agents/skills/
+python3 scripts/install-platform.py qwenwork
 ```
 
-如果当前 Codex 环境没有自带 Pillow 和 NumPy，再执行：
+这一步只生成 ZIP，不会自动发布。详情见 [平台适配说明](docs/platforms.md)。
+
+## Agent 平台兼容
+
+- Codex：提供 `.codex-plugin/plugin.json` 和标准 Agent Skills。
+- Claude Code：提供 `.claude-plugin/plugin.json` 和共享 `skills/`。
+- Qwen Code：提供 `qwen-extension.json`。
+- WorkBuddy：支持当前验证过的 `~/.workbuddy/skills` 目录，不同版本可能需要调整。
+- 千问办公：可以生成上传包；是否能上传或公开发布取决于账号和企业权限。
+
+生成新图仍要求目标 Agent 具备图片生成工具。没有图片生成能力时，规划、已有 Sheet 拆分、QA、矢量化和导出仍可使用。
+
+## 输出
+
+```text
+final-assets/
+├── assets/
+├── asset-map.json
+├── assets.ts
+├── contact-sheet.png
+├── qa-summary.json
+└── asset-pack.zip
+
+exported/
+├── png/{64,128,256}/
+├── webp/{64,128,256}/
+├── svg/                    # 仅适合矢量化的资产
+├── sprite/
+├── assets.css
+├── assets.ts
+├── export-manifest.json
+└── asset-export.zip
+```
+
+## 依赖与测试
 
 ```bash
 python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements-vector.txt  # 可选 SVG QA
+./scripts/validate.sh
 ```
 
-## 快速使用
-
-在 Codex 中输入：
-
-```text
-使用 $generate-icon-batch，为网球活动小程序生成 24 个核心功能 Icon。
-使用同一个可爱的青柠绿色 3D 吉祥物，保持角色比例、光照和配色统一。
-包含首页、发布活动、消息通知、个人资料、设置、定位、网球、好友、
-视频、日期、场地、费用和参与人数等功能。
-输出 256×256 透明 PNG，按中文名称命名并打包 ZIP。
-```
-
-拆分已有图片：
-
-```text
-使用 $split-icon-sheet 拆分这张 Icon Sheet。
-去除外部背景但保留内部白色，按照图片下方文字命名，
-完成视觉 QA 后再输出 ZIP。
-```
-
-如果你提供完整、有序的名称清单，命名和语义验收会最稳定。只提供业务领域与数量时，Skill 会先生成一份保守的 Icon 规划，并在执行过程中展示它的理解。
-
-## 输出结构
-
-```text
-final-icons/
-├── icons/
-│   ├── 001-首页.png
-│   ├── 002-发布活动.png
-│   └── ...
-├── icon-map.json
-├── icons.ts
-├── qa-summary.json
-├── contact-sheet.png
-└── icons.zip
-```
-
-## 可靠性策略
-
-- 默认每张 Sheet 最多 16 个 Icon。
-- 复杂 3D 角色建议每张 9–12 个。
-- 单张硬上限为 25 个。
-- 每批最多闭环三次。
-- 优先使用没有空位的 4×4、3×4、3×3 等布局，减少模型自动补图。
-- 数量和视觉 QA 都通过后才允许执行最终打包。
-
-## 环境要求
-
-- 具备内置图片生成能力的 Codex。
-- Python 3.10+。
-- Pillow 与 NumPy。
-- 只有在拆分“带文字标题的旧图”并使用本地 Vision OCR 时才要求 macOS + Swift；从 Prompt 生成的无标题 Sheet 不需要 OCR。
-
-生成后的拆分、背景去除和打包都在本地完成，不需要把 Sheet 再上传给第三方抠图服务。
+测试覆盖预设规划、45 个质量模式分批、48 个跨 Sheet 规划、表情文字渲染、PNG/WebP/雪碧图导出、SVG 安全清理、旧版兼容和多平台清单解析。
 
 ## 已知限制
 
-- 图片生成具有随机性，精确数量和语义偶尔需要重试。
-- 最适合背景明亮中性、彼此明显分离的 Icon Sheet。
-- 毛发、烟雾、玻璃、液体、半透明材质和复杂共享场景不适合这种边界连通抠图方式。
-- 当前输出是位图 PNG，不是可编辑 SVG。
-- 同一张 Sheet 能显著改善一致性，但无法数学保证每个角色几何完全相同。
-- 不同生成服务的定价方式不同，减少调用次数不等于固定比例的费用节省。
+- 图片生成仍具有随机性，偶尔需要定向重试。
+- 风格锚点能提高一致性，但无法数学保证角色几何完全相同。
+- 毛发、烟雾、玻璃、半透明材质和共享场景仍是抠图难点。
+- 自动描摹 SVG 不等同于设计师手工制作的干净矢量源文件。
+- 第三方平台规范会变化，正式提交商店前应重新核对官方要求。
 
-## Roadmap
-
-- 可选 SVG 描摹与矢量 QA。
-- 跨平台 Caption OCR。
-- 生成前交互式确认 Icon 清单。
-- 重试前后的视觉差异报告。
-- React、Vue、Flutter 和小程序等更多导出模板。
-
-## 参与贡献
-
-欢迎提交难拆分的 Icon Sheet、背景去除边缘案例、Prompt 改进和 Bug。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
-
-如果它帮你少做了一轮重复生成和手动切图，欢迎点一个 Star，让更多开发者看到这个工作流。
+如果它帮你省掉了一轮生成、切图、命名或 QA，欢迎点一个 Star，让更多开发者发现这个项目。
 
 ## License
 

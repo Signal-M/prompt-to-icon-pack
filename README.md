@@ -1,206 +1,228 @@
-# Prompt to Icon Pack
+# Prompt to Asset Pack
 
-> One prompt in. A consistent, named, transparent icon pack out.
+> One prompt or character reference in. A coherent, named, transparent, QA-ready visual asset pack out.
 
-![Codex Skill](https://img.shields.io/badge/Codex-Skill-111111)
+![Agent Skills](https://img.shields.io/badge/Agent-Skills-111111)
+![Codex Plugin](https://img.shields.io/badge/Codex-Plugin-111111)
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB)
 ![License MIT](https://img.shields.io/badge/License-MIT-2EA44F)
 
-[简体中文](README.zh-CN.md) · [Installation](#installation) · [How it works](#how-it-works) · [Limitations](#limitations)
+[简体中文](README.zh-CN.md) · [Installation](#installation) · [Asset types](#one-engine-many-asset-types) · [Platforms](#agent-platforms)
 
-**Prompt to Icon Pack** is a pair of Codex skills that turns a natural-language brief into a production-ready icon pack. It generates a carefully planned icon sheet, detects icons without trusting a rigid grid, removes only the exterior background, applies names from an external semantic specification, runs closed-loop QA, and exports transparent PNGs, manifests, TypeScript mappings, and a ZIP.
+**Prompt to Asset Pack** turns a brief or character reference into a production-oriented collection of icons, emoji, stickers, avatars, badges, or item sprites. It plans style-anchored sheets, detects assets without trusting a rigid grid, removes only the exterior background, assigns names from an external semantic specification, runs closed-loop per-sheet and cross-batch QA, and exports transparent PNG/WebP assets, optional SVG, mappings, previews, and ZIP packages.
 
-It is built for app, mini-program, game, and UI teams that like the visual quality of AI-generated icons but do not want to manually crop, key out, rename, and verify every asset.
+The repository keeps the original name `prompt-to-icon-pack` and the `$generate-icon-batch` compatibility entry point. The product and main skill now cover the larger prompt-to-assets workflow.
 
 ## Demo
 
-| Generated sheet | Split, transparent, and named |
+| Generated together | Split, transparent, named, and checked |
 | --- | --- |
-| ![Generated 3x3 tennis mascot icon sheet](examples/tennis-mini-program/generated-sheet.png) | ![Transparent icon contact sheet](examples/tennis-mini-program/contact-sheet.png) |
+| ![Generated 3x3 tennis mascot sheet](examples/tennis-mini-program/generated-sheet.png) | ![Transparent asset contact sheet](examples/tennis-mini-program/contact-sheet.png) |
 
-The demo above was generated in one 3×3 sheet, split into nine transparent PNGs, named in Chinese, and checked by both deterministic and independent visual QA. The first extraction caught insufficient padding around the megaphone; a localized retry fixed it before packaging.
+The first extraction of this real example found insufficient padding around a detached megaphone detail. The publish gate withheld the ZIP, a localized crop retry fixed the defect, and only the passing result was packaged.
 
-## The problem
+## Why this exists
 
-Generating icons one by one sounds simple, but production use exposes three expensive gaps:
+AI image generation is good at visual exploration, but a generated sheet is not yet an asset library:
 
-1. **Style drift** — separate generations often change perspective, proportions, palette, lighting, stroke weight, or character identity.
-2. **Repeated generation cost** — one request per icon multiplies model calls, latency, prompt repetition, and review work.
-3. **Manual post-processing** — a sheet still needs to be sliced, background-removed, named, normalized, checked, and packaged.
+1. Generating one image at a time drifts in palette, perspective, rendering, and character identity.
+2. Repeated calls multiply cost, latency, prompting, and review work.
+3. Generating a sheet still leaves manual cropping, background removal, naming, resizing, and packaging.
+4. Large 40–50 asset requests need cross-sheet consistency, not one overcrowded canvas.
+5. A successful crop can still contain the wrong concept, damaged alpha, a duplicate, or a different-looking mascot.
 
-Prompt to Icon Pack connects those steps into one auditable workflow.
+Prompt to Asset Pack joins those missing steps into one auditable pipeline.
 
-| Workflow | Generate one by one | Generate one sheet manually | Prompt to Icon Pack |
-| --- | --- | --- | --- |
-| Visual consistency | Often drifts between calls | Better shared context | Shared style contract + sheet-first batches |
-| Generation calls | Usually one or more per icon | One per sheet | One per planned rectangular batch |
-| Cropping and background | Repeated per icon | Manual | Automatic, non-grid detection |
-| Naming | Manual | Manual or OCR-dependent | Bound to the external intent list |
-| Release confidence | Manual review | Usually no formal gate | Deterministic + independent visual QA |
+## What makes it different
 
-## Why it is different
+### Style-anchored large packs
 
-### Sheet-first consistency
+Large requests are split into complete sheets under one immutable style contract. `quality`, `balanced`, and `economy` density profiles support detailed character packs, ordinary icon systems, and high-density simple assets. A 45-item character pack becomes five 3×3 sheets; ordinary icons can use larger balanced batches.
 
-Related icons are generated together under one style contract and one canvas. Shared context makes consistent scale, rendering, palette, and character design easier than isolated prompts.
+### Presets when the brief is incomplete
 
-### Fewer generation calls
-
-The planner uses complete rectangular batches such as 4×4, 3×4, or 3×3. This reduces repeated image-generation calls and can reduce cost and latency, depending on the provider and model.
+Bundled presets include universal UI sets, emoji reactions, character reactions, commerce, and sports. App requests default to UI concepts; character references default to reaction stickers. The system never blindly turns every unspecified request into emoji.
 
 ### No rigid-grid assumption
 
-AI does not reliably obey perfect spacing. The splitter detects foreground objects and clusters them into reading-order rows instead of blindly cutting equal cells.
+AI rarely obeys pixel-perfect spacing. The splitter detects foreground objects and clusters them into reading order instead of dividing the canvas into equal rectangles.
 
 ### White-safe transparency
 
-It removes bright neutral background pixels only when they connect to the boundary of a local crop. Enclosed white details—clothes, eyes, labels, highlights, or a play symbol—remain opaque.
+Only bright neutral pixels connected to the local crop boundary become transparent. Enclosed white clothes, eyes, labels, highlights, play symbols, or racket strings remain opaque.
 
-### Names come from intent, not pixels
+### Intent-based naming
 
-The ordered icon specification is the source of truth. Generated captions are prohibited, and OCR is not asked to rediscover names that were already known before generation.
+The ordered asset specification is the source of truth. Labels are forbidden inside generated sheets, and OCR is not asked to rediscover a name known before generation.
 
-### Closed-loop QA
+### Failure-aware closed-loop QA
 
-The publish gate checks count, semantics, order, duplicates, omissions, style, crop coverage, alpha quality, and naming. Generation failures trigger regeneration; localized crop or alpha failures trigger re-splitting or overrides. A failed batch is never silently published as complete.
+Failures are routed instead of blindly retried:
 
-### Production-oriented output
+- generation, semantics, identity, duplicate, omission, or style drift → regenerate that batch;
+- detection, crop, detached detail, or alpha damage → re-split or apply a local override;
+- naming mismatch → correct the external mapping;
+- vector complexity or render mismatch → retain PNG/WebP.
 
-The final package includes transparent PNGs, `icon-map.json`, `icons.ts`, a contact sheet, QA summaries, and a ZIP ready to move into an application repository.
+The final package requires deterministic extraction QA, semantic visual QA, and whole-pack cross-batch QA.
+
+### Honest SVG support
+
+Simple flat or outline artwork can use native semantic SVG. Limited-palette raster assets can use optional VTracer conversion. Every SVG is sanitized, complexity-limited, rendered back to PNG, and visually compared with its source. Detailed 3D, fur, glass, soft shadow, or gradient-heavy art stays raster when vectorization would be worse.
+
+### Reliable sticker captions
+
+Character art is generated without lettering. Captions such as “收到”, “谢谢”, or “冲鸭” are rendered after extraction with a real font, so wording remains accurate and localizable.
+
+## One engine, many asset types
+
+```yaml
+asset_kind: icon | emoji | sticker | avatar | badge | item-sprite
+```
+
+The main skills are:
+
+- `generate-asset-pack` — prompt/reference interpretation, presets, style anchors, multi-sheet planning, QA routing, and packaging.
+- `generate-sticker-pack` — character bible, reaction taxonomy, identity QA, and post-rendered captions.
+- `split-icon-sheet` — irregular sheet detection, OCR for legacy captioned sheets, white-safe background removal, and crop QA.
+- `vectorize-asset-pack` — native/traced SVG, sanitization, complexity limits, and render-back QA.
+- `export-asset-pack` — PNG/WebP variants, sprite sheets, CSS, TypeScript, and ZIP export.
+- `generate-icon-batch` — backward-compatible icon entry point.
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    A["Natural-language prompt"] --> B["Ordered icon spec + shared style"]
-    B --> C["Rectangular batch planner"]
-    C --> D["ImageGen icon sheet"]
-    D --> E["Non-grid object detection"]
-    E --> F["Boundary-connected background removal"]
-    F --> G["External semantic naming"]
-    G --> H["Deterministic QA"]
-    H --> I["Independent visual QA"]
-    I -->|Pass| J["PNG + JSON + TypeScript + ZIP"]
-    H -->|Crop or alpha failure| E
-    I -->|Semantic, count, or style failure| D
-```
-
-The repository contains two composable skills:
-
-- `generate-icon-batch` — prompt interpretation, batch planning, image generation, semantic naming, QA routing, and final packaging.
-- `split-icon-sheet` — irregular-layout detection, local background removal, caption/OCR support for existing sheets, extraction QA, and transparent PNG export.
-
-## Installation
-
-### One command after cloning
-
-```bash
-git clone https://github.com/m2290526022-boop/prompt-to-icon-pack.git
-cd prompt-to-icon-pack
-./scripts/install.sh
-```
-
-The installer copies both skills to `~/.agents/skills` and refuses to overwrite an existing installation.
-
-### Manual installation
-
-```bash
-mkdir -p ~/.agents/skills
-cp -R skills/generate-icon-batch ~/.agents/skills/
-cp -R skills/split-icon-sheet ~/.agents/skills/
-```
-
-Install local processing dependencies when your Codex environment does not already provide them:
-
-```bash
-python3 -m pip install -r requirements.txt
+    A["Prompt or character reference"] --> B["Ordered asset spec"]
+    B --> C["Style contract + anchor"]
+    C --> D["Complete multi-sheet batches"]
+    D --> E["Non-grid detection"]
+    E --> F["Boundary-connected transparency"]
+    F --> G["Intent naming"]
+    G --> H["Per-sheet QA"]
+    H --> I["Cross-batch QA"]
+    I --> J["PNG / WebP / optional SVG"]
+    J --> K["Mappings + previews + ZIP"]
+    H -->|targeted retry| D
 ```
 
 ## Quick start
 
-Ask Codex:
+Ask a compatible agent:
 
 ```text
-Use $generate-icon-batch to create 24 icons for a tennis mini-program.
-Use one cute lime-green 3D mascot, consistent proportions and lighting.
-Include home, publish event, notifications, profile, settings, location,
-tennis, friends, video, calendar, venue, fee, participants, and related actions.
-Export 256×256 transparent PNGs with Chinese names and a ZIP.
+Use $generate-asset-pack to create 48 friendly product icons for a tennis mini-program.
+Use a consistent lime-green and yellow 3D style, balanced density, Chinese names,
+transparent PNG and WebP outputs, and publish only after cross-batch QA passes.
+```
+
+For a character pack:
+
+```text
+Use $generate-sticker-pack with my cat reference image.
+Create the default 24 reaction stickers, preserve the face, ears, colors, and scarf,
+add reliable Chinese captions after extraction, and export a transparent ZIP.
 ```
 
 For an existing sheet:
 
 ```text
-Use $split-icon-sheet to split this image into transparent PNG icons.
-Preserve internal white details, name items from their captions, run visual QA,
-and return a ZIP only if every icon passes.
+Use $split-icon-sheet to split this sheet without assuming a grid.
+Preserve internal white details, use the supplied ordered labels, and return a ZIP only after QA passes.
 ```
 
-Supplying an exact ordered label list produces the most predictable names and semantic QA. If the request only states a domain and count, the skill drafts a conservative icon list and exposes that interpretation during execution.
+## Installation
 
-## Outputs
+Clone once, then install the same canonical skills for the desired client:
+
+```bash
+git clone https://github.com/m2290526022-boop/prompt-to-icon-pack.git
+cd prompt-to-icon-pack
+
+python3 scripts/install-platform.py codex
+python3 scripts/install-platform.py claude-code
+python3 scripts/install-platform.py qwen-code
+python3 scripts/install-platform.py workbuddy
+```
+
+`./scripts/install.sh` remains the Codex shortcut. Installers refuse to overwrite existing skills unless `--force` is explicitly supplied.
+
+Build a reviewable QwenWork upload bundle without publishing it:
+
+```bash
+python3 scripts/install-platform.py qwenwork
+```
+
+See [platform packaging](docs/platforms.md) for manifests and limitations.
+
+## Agent platforms
+
+- **Codex:** `.codex-plugin/plugin.json` plus personal/project Agent Skills.
+- **Claude Code:** `.claude-plugin/plugin.json` plus the shared `skills/` directory.
+- **Qwen Code:** `qwen-extension.json` plus personal/project skills.
+- **WorkBuddy:** installer for the tested `~/.workbuddy/skills` layout; versions may differ.
+- **QwenWork / 千问办公:** produces an uploadable review bundle; account and organization policies control upload or marketplace availability.
+
+The workflow requires an image-generation capability to create new art. On an agent without an image tool, planning, splitting, QA, vectorization, and export still work, but sheet generation must come from a connected image model or a user-supplied sheet.
+
+## Output
 
 ```text
-final-icons/
-├── icons/
+final-assets/
+├── assets/
 │   ├── 001-home.png
-│   ├── 002-publish-event.png
 │   └── ...
-├── icon-map.json
-├── icons.ts
-├── qa-summary.json
+├── asset-map.json
+├── assets.ts
 ├── contact-sheet.png
-└── icons.zip
+├── qa-summary.json
+└── asset-pack.zip
+
+exported/
+├── png/{64,128,256}/
+├── webp/{64,128,256}/
+├── svg/                       # eligible assets only
+├── sprite/
+├── assets.css
+├── assets.ts
+├── export-manifest.json
+└── asset-export.zip
 ```
-
-- `icons/` — normalized transparent PNG files with stable numbered names.
-- `icon-map.json` — ordered labels, descriptions, filenames, batch provenance, and IDs.
-- `icons.ts` — application-friendly icon paths and label mappings.
-- `qa-summary.json` — deterministic and semantic publish-gate results.
-- `contact-sheet.png` — checkerboard preview for fast visual review.
-- `icons.zip` — deployable package containing icons and runtime mappings.
-
-## Reliability model
-
-- Default maximum: 16 icons per generated sheet.
-- Detailed characters or 3D scenes: prefer 9–12.
-- Hard maximum: 25.
-- Retry limit: three attempts per batch.
-- Count, semantic, duplicate, omission, order, or style failure: regenerate the batch.
-- Crop, merged-neighbor, lost detail, or alpha failure: re-split or apply a localized source-box override.
-- Any unresolved failure: report `needs_review` and withhold the final package.
 
 ## Requirements
 
-- Codex with the built-in image-generation tool for prompt-to-pack generation.
 - Python 3.10+.
-- Pillow and NumPy for local image processing.
-- macOS and Swift are only required when using local Vision OCR on captioned existing sheets. The normal unlabeled generation pipeline does not require OCR.
+- Pillow and NumPy for planning, QA, splitting, and export.
+- Optional macOS Vision OCR for captioned legacy sheets.
+- Optional VTracer CLI and CairoSVG for traced SVG plus render-back QA.
+- An image-generation tool only when creating new sheets.
 
-Post-processing runs locally. The generated sheet is processed without uploading it to another background-removal service.
+```bash
+python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements-vector.txt  # optional SVG QA
+```
+
+## Test
+
+```bash
+./scripts/validate.sh
+```
+
+The tests cover preset planning, 45-item quality batching, 48-item multi-sheet planning, caption rendering, PNG/WebP/sprite export, SVG sanitization, legacy compatibility, and platform manifest parsing.
 
 ## Limitations
 
-- Image generation remains probabilistic. Exact counts and semantic details sometimes require retries.
-- The workflow works best when icons are visibly separated on a bright neutral exterior background.
-- Hair, smoke, glass, translucent materials, and complex shared scenes are not ideal targets for this boundary-connected removal method.
-- Output is raster PNG, not editable vector artwork.
-- A shared sheet improves consistency but does not mathematically guarantee identical character geometry across every item.
-- Provider pricing differs; fewer calls do not guarantee a specific percentage of savings.
-
-## Roadmap
-
-- Optional SVG tracing and vector QA.
-- Cross-platform OCR for captioned legacy sheets.
-- Interactive approval of the planned icon list before generation.
-- Visual diff reports for retries.
-- More export targets for React, Vue, Flutter, and mini-program frameworks.
+- Image generation remains probabilistic and may require targeted retries.
+- Cross-sheet style anchors improve consistency but cannot mathematically guarantee identical geometry.
+- Hair, smoke, glass, translucency, and shared scenes remain difficult background-removal targets.
+- Traced SVG is not equivalent to clean hand-authored vector source.
+- Exact third-party store dimensions and publishing rules change; verify current official platform requirements before submission.
 
 ## Contributing
 
-Bug reports, hard icon sheets, extraction edge cases, and prompt improvements are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Hard sheets, identity-drift examples, extraction failures, vectorization edge cases, new presets, and exporter contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-If this workflow saves you a round of repetitive generation and manual slicing, consider starring the repository—it helps more builders discover it.
+If this removes a round of generation, cropping, naming, or QA from your workflow, consider starring the project so more builders can find it.
 
 ## License
 

@@ -1,0 +1,3 @@
+CairoSVG>=2.7
+# Install VTracer using an official release binary, `cargo install vtracer`,
+# or the supported Python package that provides the `vtracer` CLI.

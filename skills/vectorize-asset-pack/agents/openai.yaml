@@ -1,0 +1,4 @@
+interface:
+  display_name: "视觉资产矢量化"
+  short_description: "将适合的位图资产转换为安全且经过回渲染验证的 SVG"
+  default_prompt: "Use $vectorize-asset-pack to create safe, QA-validated SVG versions of eligible assets in this pack."

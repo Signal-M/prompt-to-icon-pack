@@ -1,4 +1,4 @@
 interface:
-  display_name: "批量 Icon 工厂"
-  short_description: "输入 Prompt，生成、拆分并质检一批透明 Icon"
-  default_prompt: "Use $generate-icon-batch to turn my prompt into a named batch of transparent PNG icons and a ZIP package."
+  display_name: "批量 Icon 工厂（兼容入口）"
+  short_description: "Legacy icon entry for the stronger visual asset pack pipeline"
+  default_prompt: "Use $generate-icon-batch to create a coherent, named, QA-validated transparent icon pack."

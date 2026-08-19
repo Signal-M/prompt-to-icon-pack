@@ -1,0 +1,4 @@
+interface:
+  display_name: "批量视觉资产工厂"
+  short_description: "Generate and QA complete visual asset packs from one prompt"
+  default_prompt: "Use $generate-asset-pack to turn my prompt or reference image into a coherent, named, QA-validated visual asset pack."

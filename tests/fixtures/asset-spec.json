@@ -1,0 +1,9 @@
+{
+  "project": "mascot-reactions",
+  "asset_kind": "sticker",
+  "preset": "character-reactions-24",
+  "style": "friendly rounded 3D mascot with a fixed green and cream palette",
+  "density": "quality",
+  "reference_images": ["reference-character.png"],
+  "constraints": ["preserve face, clothing, proportions, and signature cap"]
+}

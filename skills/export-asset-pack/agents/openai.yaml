@@ -1,0 +1,4 @@
+interface:
+  display_name: "多平台资产导出"
+  short_description: "输出多尺寸 PNG、WebP、雪碧图以及工程映射文件"
+  default_prompt: "Use $export-asset-pack to export this transparent visual asset pack for my application targets."

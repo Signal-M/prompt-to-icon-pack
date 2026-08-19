@@ -1,0 +1,92 @@
+{
+  "universal-ui-24": {
+    "asset_kind": "icon",
+    "items": [
+      ["home", "home or primary dashboard"], ["search", "magnifying glass search"],
+      ["messages", "chat messages"], ["notifications", "notification bell"],
+      ["profile", "user profile"], ["settings", "settings gear"],
+      ["help", "help and support"], ["favorite", "favorite heart or star"],
+      ["share", "share action"], ["edit", "edit pencil"],
+      ["delete", "delete or trash"], ["add", "add new item"],
+      ["location", "map location pin"], ["time", "clock and time"],
+      ["calendar", "calendar date"], ["phone", "telephone contact"],
+      ["camera", "camera capture"], ["image", "photo gallery"],
+      ["upload", "upload action"], ["download", "download action"],
+      ["filter", "filter controls"], ["sort", "sort order"],
+      ["success", "successful completion"], ["warning", "warning or attention"]
+    ]
+  },
+  "universal-ui-48": {
+    "extends": "universal-ui-24",
+    "items": [
+      ["menu", "navigation menu"], ["close", "close action"],
+      ["back", "navigate back"], ["forward", "navigate forward"],
+      ["refresh", "refresh content"], ["more", "more options"],
+      ["lock", "locked and secure"], ["unlock", "unlocked access"],
+      ["visibility", "visible eye"], ["hidden", "hidden visibility"],
+      ["copy", "copy content"], ["link", "external or internal link"],
+      ["save", "save content"], ["send", "send message"],
+      ["play", "play media"], ["pause", "pause media"],
+      ["volume", "audio volume"], ["microphone", "microphone input"],
+      ["document", "document file"], ["folder", "folder collection"],
+      ["scan", "scan code or document"], ["qr-code", "QR code scanner"],
+      ["info", "information"], ["error", "error or failure"]
+    ]
+  },
+  "emoji-reactions-24": {
+    "asset_kind": "emoji",
+    "items": [
+      ["happy", "happy smile"], ["laughing", "laughing with joy"],
+      ["love", "loving heart eyes"], ["like", "pleased approval"],
+      ["cheering", "energetic encouragement"], ["thanks", "grateful thanks"],
+      ["sorry", "sincere apology"], ["received", "confident acknowledgement"],
+      ["question", "confused question"], ["thinking", "deep thinking"],
+      ["surprised", "wide-eyed surprise"], ["angry", "angry frustration"],
+      ["wronged", "hurt and wronged"], ["crying", "sad crying"],
+      ["shy", "bashful shyness"], ["speechless", "speechless disbelief"],
+      ["sleepy", "sleepy and tired"], ["expecting", "hopeful expectation"],
+      ["celebrating", "party celebration"], ["goodbye", "friendly wave goodbye"],
+      ["good-morning", "bright good morning"], ["good-night", "sleepy good night"],
+      ["slacking", "playful slacking off"], ["lets-go", "determined lets go"]
+    ]
+  },
+  "character-reactions-24": {
+    "asset_kind": "sticker",
+    "items": [
+      ["开心", "开心微笑"], ["大笑", "捧腹大笑"], ["比心", "双手比心"],
+      ["点赞", "竖起大拇指"], ["加油", "握拳加油"], ["谢谢", "真诚感谢"],
+      ["抱歉", "低头道歉"], ["收到", "自信确认收到"], ["疑问", "困惑地提问"],
+      ["思考", "托腮思考"], ["惊讶", "睁大眼睛惊讶"], ["生气", "气鼓鼓生气"],
+      ["委屈", "眼含泪光委屈"], ["哭泣", "伤心哭泣"], ["害羞", "脸红害羞"],
+      ["无语", "无语和难以置信"], ["困倦", "打哈欠困倦"], ["期待", "双手合十期待"],
+      ["庆祝", "撒花庆祝"], ["拜拜", "挥手告别"], ["早安", "活力早安"],
+      ["晚安", "抱枕准备睡觉"], ["摸鱼", "偷偷放松摸鱼"], ["冲鸭", "向前冲刺打气"]
+    ]
+  },
+  "commerce-24": {
+    "asset_kind": "icon",
+    "items": [
+      ["store", "storefront"], ["category", "product categories"], ["product", "product item"],
+      ["cart", "shopping cart"], ["checkout", "checkout counter"], ["payment", "secure payment"],
+      ["coupon", "discount coupon"], ["sale", "sale promotion"], ["gift", "gift box"],
+      ["order", "order document"], ["pending", "pending order"], ["paid", "paid order"],
+      ["packed", "packed parcel"], ["delivery", "delivery truck"], ["tracking", "parcel tracking"],
+      ["received", "received parcel"], ["return", "product return"], ["refund", "refund payment"],
+      ["review", "product review"], ["favorite", "favorite product"], ["customer-service", "customer support"],
+      ["chat", "seller chat"], ["address", "delivery address"], ["invoice", "invoice receipt"]
+    ]
+  },
+  "sports-24": {
+    "asset_kind": "icon",
+    "items": [
+      ["activity", "sports activity"], ["calendar", "activity calendar"], ["time", "start time"],
+      ["venue", "sports venue"], ["location", "venue location"], ["sport", "sports equipment"],
+      ["participants", "participant group"], ["team", "sports team"], ["coach", "coach or instructor"],
+      ["level", "skill level"], ["ranking", "ranking podium"], ["score", "scoreboard"],
+      ["trophy", "winner trophy"], ["medal", "achievement medal"], ["fee", "participation fee"],
+      ["register", "registration form"], ["check-in", "event check-in"], ["rules", "activity rules"],
+      ["equipment", "sports equipment bag"], ["weather", "outdoor weather"], ["live", "live broadcast"],
+      ["video", "sports video"], ["photos", "event photos"], ["share", "share result"]
+    ]
+  }
+}

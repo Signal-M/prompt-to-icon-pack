@@ -1,0 +1,4 @@
+interface:
+  display_name: "IP 表情包工厂"
+  short_description: "从角色参考图批量生成透明表情包并保持跨批次身份一致"
+  default_prompt: "Use $generate-sticker-pack to turn my character reference into a consistent transparent reaction sticker pack."
