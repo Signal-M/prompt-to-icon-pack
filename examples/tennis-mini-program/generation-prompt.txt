@@ -1,0 +1,20 @@
+Use case: stylized-concept
+Asset type: production UI icon sheet for later automatic splitting
+Primary request: create exactly 9 distinct icons in the exact reading order listed below
+Shared style: 可爱的青柠绿色网球吉祥物，精致柔和的 3D 卡通图标，统一角色比例、材质、柔和光照和明快的绿色黄色配色
+Scene/backdrop: one perfectly uniform bright neutral white background across the whole canvas
+Composition: 3 rows by 3 columns; fill positions left-to-right, top-to-bottom; one compact icon cluster per position; generous equal blank space; no overlap; no shared scene
+Ordered icon intents:
+1. 首页: 吉祥物站在简洁的小房子旁边开心挥手
+2. 发布活动: 吉祥物拿着黄色扩音器发布活动
+3. 消息通知: 吉祥物抱着一枚绿色通知铃铛
+4. 个人资料: 吉祥物胸前带一个清晰的人像资料卡符号
+5. 设置: 吉祥物抱着一枚绿色齿轮
+6. 定位: 吉祥物站在一个绿色地图定位针旁边
+7. 网球: 吉祥物一手拿网球拍一手拿黄色网球
+8. 好友: 两个青柠绿色吉祥物并肩开心击掌
+9. 视频: 吉祥物举着带三角播放符号的小摄像机
+The labels above are semantic planning names only. Do not render them or any other text in the image.
+User constraints: 面向网球活动小程序; 白色帽子和白色衣服细节必须保留
+Constraints: exact count 9; every intent appears once; cohesive scale, perspective, stroke weight, lighting, palette, and detail level; each icon fully visible with ample padding; preserve intentional white details; keep any detached decorations close to their icon
+Avoid: captions, labels, letters, numbers, watermarks, unrequested logos, duplicate concepts, extra icons, cropped subjects, separator lines, card frames, decorative objects between icons, shadows or texture in the exterior background

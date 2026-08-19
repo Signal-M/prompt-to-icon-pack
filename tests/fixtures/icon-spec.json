@@ -1,0 +1,15 @@
+{
+  "project": "smoke-test",
+  "style": "consistent friendly flat UI icons with a green and yellow palette",
+  "icons": [
+    {"label": "home", "description": "a small welcoming house"},
+    {"label": "publish", "description": "a compact megaphone"},
+    {"label": "notification", "description": "a notification bell"},
+    {"label": "profile", "description": "a user profile card"},
+    {"label": "settings", "description": "a gear"},
+    {"label": "location", "description": "a map pin"},
+    {"label": "sport", "description": "a tennis racket and ball"},
+    {"label": "friends", "description": "two friendly people"},
+    {"label": "video", "description": "a video camera with a play symbol"}
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "project": "tennis-mini-program-core",
+  "style": "可爱的青柠绿色网球吉祥物，精致柔和的 3D 卡通图标，统一角色比例、材质、柔和光照和明快的绿色黄色配色",
+  "count": 9,
+  "icons": [
+    {
+      "index": 1,
+      "id": "icon001",
+      "label": "首页",
+      "description": "吉祥物站在简洁的小房子旁边开心挥手",
+      "file": "001-首页.png",
+      "batch": 1,
+      "batch_index": 1
+    },
+    {
+      "index": 2,
+      "id": "icon002",
+      "label": "发布活动",
+      "description": "吉祥物拿着黄色扩音器发布活动",
+      "file": "002-发布活动.png",
+      "batch": 1,
+      "batch_index": 2
+    },
+    {
+      "index": 3,
+      "id": "icon003",
+      "label": "消息通知",
+      "description": "吉祥物抱着一枚绿色通知铃铛",
+      "file": "003-消息通知.png",
+      "batch": 1,
+      "batch_index": 3
+    },
+    {
+      "index": 4,
+      "id": "icon004",
+      "label": "个人资料",
+      "description": "吉祥物胸前带一个清晰的人像资料卡符号",
+      "file": "004-个人资料.png",
+      "batch": 1,
+      "batch_index": 4
+    },
+    {
+      "index": 5,
+      "id": "icon005",
+      "label": "设置",
+      "description": "吉祥物抱着一枚绿色齿轮",
+      "file": "005-设置.png",
+      "batch": 1,
+      "batch_index": 5
+    },
+    {
+      "index": 6,
+      "id": "icon006",
+      "label": "定位",
+      "description": "吉祥物站在一个绿色地图定位针旁边",
+      "file": "006-定位.png",
+      "batch": 1,
+      "batch_index": 6
+    },
+    {
+      "index": 7,
+      "id": "icon007",
+      "label": "网球",
+      "description": "吉祥物一手拿网球拍一手拿黄色网球",
+      "file": "007-网球.png",
+      "batch": 1,
+      "batch_index": 7
+    },
+    {
+      "index": 8,
+      "id": "icon008",
+      "label": "好友",
+      "description": "两个青柠绿色吉祥物并肩开心击掌",
+      "file": "008-好友.png",
+      "batch": 1,
+      "batch_index": 8
+    },
+    {
+      "index": 9,
+      "id": "icon009",
+      "label": "视频",
+      "description": "吉祥物举着带三角播放符号的小摄像机",
+      "file": "009-视频.png",
+      "batch": 1,
+      "batch_index": 9
+    }
+  ]
+}

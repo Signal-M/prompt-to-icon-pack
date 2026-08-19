@@ -1,0 +1,4 @@
+interface:
+  display_name: "智能图标表拆分"
+  short_description: "拆分有无标签的不规则图标表，透明抠图并闭环质检"
+  default_prompt: "Use $split-icon-sheet to split this labeled icon sheet into transparent, correctly named PNG files and a QA-validated ZIP."
