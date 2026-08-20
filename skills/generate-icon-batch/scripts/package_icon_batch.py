@@ -22,6 +22,8 @@ REQUIRED_CHECKS = (
     "style_consistency",
     "no_duplicates_or_omissions",
     "crop_and_alpha",
+    "source_fidelity",
+    "white_preservation",
     "naming",
 )
 

@@ -17,6 +17,8 @@ Require all checks in `semantic-qa.json`:
     "identity_consistency": true,
     "no_duplicates_or_omissions": true,
     "crop_and_alpha": true,
+    "source_fidelity": true,
+    "white_preservation": true,
     "naming": true
   },
   "failure_class": null,
@@ -49,7 +51,7 @@ After deterministic cross-batch QA, write `global-visual-qa.json`:
 - `generation_error`: wrong count, concept, duplicate, omission, identity, or style; regenerate that batch with one targeted correction.
 - `detection_error`: merged, missing, or extra region; reduce density or rerun detection.
 - `crop_error`: clipped edge or detached detail; expand the local source box.
-- `alpha_error`: exterior residue or lost internal white; adjust boundary background sampling.
+- `alpha_error`: exterior residue or lost internal white; compare SOURCE with COLOR, then use a localized protected polygon or semantic-matting fallback. Never approve from checkerboard alone.
 - `naming_error`: correct the external ordered mapping, never the pixels.
 - `style_drift`: regenerate only the drifting batch with the same style anchor.
 - `vector_error`: keep the raster source and do not publish an inferior SVG.

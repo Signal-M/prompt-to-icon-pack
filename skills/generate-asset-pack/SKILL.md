@@ -15,7 +15,7 @@ Turn one brief into a coherent, named, QA-gated visual asset pack. Keep the asse
 4. For character or cross-sheet work, create one style anchor before generating all batches. Keep the same reference image, palette, proportions, viewpoint, material, outline, and lighting contract in every generation.
 5. Read [the generation contract](references/generation-contract.md). Generate each planned sheet with the built-in image-generation tool. Never render planning labels or filenames into a sheet.
 6. Run `$split-icon-sheet` in unlabeled mode with each batch's `labels.txt`.
-7. Inspect each source sheet, detection debug image, contact sheet, and transparent outputs. Write `semantic-qa.json` using [the QA schema](references/qa-rubric.md).
+7. Inspect each source sheet, detection debug image, `qa-comparison.png`, and transparent outputs. On the colored comparison panels, verify that no source-white semantic region became transparent. Write `semantic-qa.json` using [the QA schema](references/qa-rubric.md). Prefer a fresh independent QA subagent with raw artifacts only.
 8. Classify failures before retrying. Regenerate generation failures; rerun extraction for crop or alpha failures; correct only the external mapping for naming failures. Retry a failed batch at most three times.
 9. After every batch passes, run `scripts/cross_batch_qa.py`. Compare style and identity visually across all sheets, then write `global-visual-qa.json`.
 10. Run `scripts/package_asset_pack.py`. Do not package missing, partial, uncertain, or failed work as complete.
@@ -60,4 +60,4 @@ Accept `assets` as the canonical item array and `icons` as a legacy alias. Each 
 - Remove only bright neutral background connected to a local crop boundary. Preserve enclosed white, highlights, eyes, clothes, and embedded art.
 - Keep sticker wording out of image generation. Add reliable text after extraction with `$generate-sticker-pack`.
 - Use user-owned or authorized character references.
-- Withhold the final ZIP when count, semantics, identity, style, crop, alpha, naming, or cross-batch QA remains unresolved.
+- Withhold the final ZIP when count, semantics, identity, style, crop, alpha, source fidelity, white preservation, naming, or cross-batch QA remains unresolved.

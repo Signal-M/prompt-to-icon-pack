@@ -11,7 +11,9 @@ All checks must pass:
 3. `style_consistency`: palette, rendering style, viewpoint, scale, padding, and detail level form one coherent set.
 4. `no_duplicates_or_omissions`: every planned concept appears exactly once with no near-duplicate replacing another item.
 5. `crop_and_alpha`: no subject is clipped or merged with a neighbor; exterior background is transparent; internal white and intentional embedded details remain opaque.
-6. `naming`: every PNG filename and manifest label matches the external ordered specification.
+6. `source_fidelity`: every semantic region visible in the source remains visible after alpha extraction.
+7. `white_preservation`: high-contrast navy/magenta previews show no background through source-white hats, clothes, eyes, shoes, symbols, or props.
+8. `naming`: every PNG filename and manifest label matches the external ordered specification.
 
 Inspect the original sheet at full resolution when judging small detached details. Use the checkerboard contact sheet for alpha damage, but do not use it alone to judge semantic correctness.
 
@@ -38,6 +40,8 @@ Create one file inside each `batch-NN` directory:
     "style_consistency": true,
     "no_duplicates_or_omissions": true,
     "crop_and_alpha": true,
+    "source_fidelity": true,
+    "white_preservation": true,
     "naming": true
   },
   "notes": []

@@ -18,7 +18,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 REQUIRED_BATCH_CHECKS = (
     "count", "order_and_semantics", "style_consistency", "identity_consistency",
-    "no_duplicates_or_omissions", "crop_and_alpha", "naming",
+    "no_duplicates_or_omissions", "crop_and_alpha", "source_fidelity",
+    "white_preservation", "naming",
 )
 REQUIRED_GLOBAL_CHECKS = (
     "style_anchor_adherence", "cross_batch_palette", "cross_batch_scale_and_padding",

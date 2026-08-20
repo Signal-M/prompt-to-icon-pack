@@ -256,6 +256,25 @@ def apply_overrides(records: list[dict[str, Any]], path: str | None) -> None:
                 if len(box) != 4 or box[2] <= box[0] or box[3] <= box[1]:
                     raise RuntimeError(f"Invalid {key} override for icon {index}: {box}")
                 record[key] = box
+        if "protected_polygons" in override:
+            polygons = override["protected_polygons"]
+            if not isinstance(polygons, list):
+                raise RuntimeError(f"protected_polygons for icon {index} must be a list")
+            normalized: list[list[list[int]]] = []
+            for polygon in polygons:
+                if not isinstance(polygon, list) or len(polygon) < 3:
+                    raise RuntimeError(
+                        f"Each protected polygon for icon {index} needs at least three points"
+                    )
+                points: list[list[int]] = []
+                for point in polygon:
+                    if not isinstance(point, list) or len(point) != 2:
+                        raise RuntimeError(
+                            f"Invalid protected polygon point for icon {index}: {point!r}"
+                        )
+                    points.append([int(point[0]), int(point[1])])
+                normalized.append(points)
+            record["protected_polygons"] = normalized
         record["manual_override"] = True
 
 
@@ -274,6 +293,7 @@ def prepare_output_directory(out_dir: Path) -> None:
             "ocr-raw.json",
             "detection-debug.png",
             "contact-sheet.png",
+            "qa-comparison.png",
             "icons.zip",
         ):
             path = out_dir / name
@@ -462,6 +482,27 @@ def segment_foreground(
     }
 
 
+def restore_protected_polygons(
+    rgba: np.ndarray,
+    source_crop: Image.Image,
+    global_box: list[int],
+    polygons: list[list[list[int]]] | None,
+) -> int:
+    """Restore source opacity inside QA-approved semantic keep polygons."""
+    if not polygons:
+        return 0
+    mask_image = Image.new("L", source_crop.size, 0)
+    draw = ImageDraw.Draw(mask_image)
+    for polygon in polygons:
+        local = [(x - global_box[0], y - global_box[1]) for x, y in polygon]
+        draw.polygon(local, fill=255)
+    protect = np.asarray(mask_image, dtype=np.uint8) >= 128
+    before = rgba[:, :, 3].copy()
+    source_alpha = np.asarray(source_crop.convert("RGBA"), dtype=np.uint8)[:, :, 3]
+    rgba[:, :, 3][protect] = source_alpha[protect]
+    return int(((before < 20) & (rgba[:, :, 3] >= 20)).sum())
+
+
 def cluster_component_rows(components: list[Component]) -> list[list[Component]]:
     if not components:
         raise RuntimeError("No foreground icon objects detected")
@@ -607,6 +648,7 @@ def safe_filename(index: int, label: str) -> str:
 
 def qa_segment(
     rgba: np.ndarray,
+    source_crop: Image.Image,
     global_box: list[int],
     image_size: tuple[int, int],
     label_center_x: float,
@@ -651,6 +693,21 @@ def qa_segment(
 
     rgb = rgba[:, :, :3]
     enclosed_white = int(((rgb.min(axis=2) >= 238) & mask).sum())
+    source_rgb = np.asarray(source_crop.convert("RGB"), dtype=np.uint8)
+    source_i = source_rgb.astype(np.int16)
+    bright_neutral = (
+        (source_i.max(axis=2) - source_i.min(axis=2) <= 18)
+        & (source_i.min(axis=2) >= 238)
+    )
+    horizontal_interior = np.zeros_like(mask)
+    for y in range(height):
+        xs = np.where(mask[y])[0]
+        if len(xs) >= 2:
+            horizontal_interior[y, xs[0] : xs[-1] + 1] = True
+    suspicious_white = bright_neutral & ~mask & horizontal_interior
+    suspicious_components = connected_components(suspicious_white)
+    largest_suspicious = max((component.area for component in suspicious_components), default=0)
+    white_removal_risk = largest_suspicious >= max(96, int(mask.sum() * 0.018))
     return {
         "passed": not issues,
         "issues": issues,
@@ -659,6 +716,8 @@ def qa_segment(
         "component_count": len(components),
         "significant_component_count": len(significant),
         "enclosed_white_pixels_preserved": enclosed_white,
+        "white_removal_risk": white_removal_risk,
+        "largest_suspicious_white_region": largest_suspicious,
         "source_content_box": [
             global_box[0] + box[0],
             global_box[1] + box[1],
@@ -710,7 +769,14 @@ def attempt_icon(
             brightness_floor=config["brightness_floor"],
             color_tolerance=config["color_tolerance"],
         )
-        qa = qa_segment(rgba, box, source.size, label_center, neighbor_centers)
+        restored = restore_protected_polygons(
+            rgba,
+            crop,
+            box,
+            record.get("protected_polygons"),
+        )
+        segmentation["protected_white_pixels_restored"] = restored
+        qa = qa_segment(rgba, crop, box, source.size, label_center, neighbor_centers)
         attempt = {
             "attempt": attempt_number,
             "source_box": box,
@@ -798,6 +864,56 @@ def save_contact_sheet(entries: list[dict[str, Any]], icons_dir: Path, path: Pat
         sheet.paste(bg, (x, y))
         label = f'{entry["index"]:02d} {entry["label"]}'
         draw.text((x + 5, y + tile + 6), label, fill=(20, 20, 20), font=font)
+    sheet.save(path)
+
+
+def save_qa_comparison(
+    source: Image.Image,
+    entries: list[dict[str, Any]],
+    icons_dir: Path,
+    path: Path,
+) -> None:
+    """Render source/output pairs on high-contrast backgrounds for visual QA."""
+    panel = 180
+    label_height = 30
+    header_height = 34
+    row_height = panel + label_height
+    sheet = Image.new("RGB", (panel * 3, header_height + row_height * len(entries)), "white")
+    draw = ImageDraw.Draw(sheet)
+    title_font = find_font(14)
+    label_font = find_font(13)
+    for column, title in enumerate(("SOURCE", "CHECKER", "COLOR")):
+        draw.text((column * panel + 8, 8), title, fill=(20, 20, 20), font=title_font)
+
+    for offset, entry in enumerate(entries):
+        y = header_height + offset * row_height
+        attempts = entry["qa"].get("attempts", [])
+        selected = entry["qa"].get("selected_attempt")
+        attempt = next((item for item in attempts if item["attempt"] == selected), None)
+        box = attempt["source_box"] if attempt else [0, 0, source.width, source.height]
+        crop = source.crop(box).convert("RGB")
+        crop.thumbnail((panel - 16, panel - 16), Image.Resampling.LANCZOS)
+        source_panel = Image.new("RGB", (panel, panel), "white")
+        source_panel.paste(crop, ((panel - crop.width) // 2, (panel - crop.height) // 2))
+        sheet.paste(source_panel, (0, y))
+
+        icon = Image.open(icons_dir / entry["file"]).convert("RGBA")
+        icon.thumbnail((panel - 16, panel - 16), Image.Resampling.LANCZOS)
+        checker = checkerboard(panel)
+        checker.paste(icon, ((panel - icon.width) // 2, (panel - icon.height) // 2), icon)
+        sheet.paste(checker, (panel, y))
+
+        contrast = Image.new("RGB", (panel, panel), (25, 35, 56))
+        contrast_draw = ImageDraw.Draw(contrast)
+        contrast_draw.rectangle((panel // 2, 0, panel, panel), fill=(210, 38, 105))
+        contrast.paste(icon, ((panel - icon.width) // 2, (panel - icon.height) // 2), icon)
+        sheet.paste(contrast, (panel * 2, y))
+        draw.text(
+            (8, y + panel + 6),
+            f'{entry["index"]:02d} {entry["label"]}',
+            fill=(20, 20, 20),
+            font=label_font,
+        )
     sheet.save(path)
 
 
@@ -932,6 +1048,7 @@ def main() -> int:
     )
     write_typescript(entries, out_dir / "icons.ts")
     save_contact_sheet(entries, icons_dir, out_dir / "contact-sheet.png")
+    save_qa_comparison(source, entries, icons_dir, out_dir / "qa-comparison.png")
 
     passed = not failures and not uncertain_names
     report = {
@@ -951,6 +1068,11 @@ def main() -> int:
             "passed": passed,
             "zip_created": False,
             "reason": None if passed else "Resolve QA failures and uncertain OCR names before publishing.",
+        },
+        "visual_qa": {
+            "required": True,
+            "artifact": "qa-comparison.png",
+            "instruction": "Compare every SOURCE panel with CHECKER and COLOR; reject any white_removed or missing_component result.",
         },
     }
     report_path = out_dir / "qa-report.json"

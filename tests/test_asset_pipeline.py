@@ -18,6 +18,7 @@ PACKAGE = ROOT / "skills/generate-asset-pack/scripts/package_asset_pack.py"
 EXPORT = ROOT / "skills/export-asset-pack/scripts/export_asset_pack.py"
 CAPTION = ROOT / "skills/generate-sticker-pack/scripts/render_sticker_text.py"
 VECTOR = ROOT / "skills/vectorize-asset-pack/scripts/vectorize_asset_pack.py"
+SPLITTER = ROOT / "skills/split-icon-sheet/scripts/split_icon_sheet.py"
 
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -28,11 +29,49 @@ def load_module(path: Path, name: str):
     spec = importlib.util.spec_from_file_location(name, path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
 
 
 class AssetPipelineTests(unittest.TestCase):
+    def test_protected_polygon_restores_only_reviewed_white_region(self) -> None:
+        module = load_module(SPLITTER, "split_icon_sheet")
+        source = Image.new("RGBA", (40, 40), (252, 252, 250, 255))
+        rgba = __import__("numpy").zeros((40, 40, 4), dtype="uint8")
+        restored = module.restore_protected_polygons(
+            rgba,
+            source,
+            [100, 200, 140, 240],
+            [[[110, 210], [130, 210], [130, 230], [110, 230]]],
+        )
+        self.assertGreater(restored, 0)
+        self.assertEqual(int(rgba[20, 20, 3]), 255)
+        self.assertEqual(int(rgba[2, 2, 3]), 0)
+
+    def test_qa_comparison_includes_source_and_contrast_panels(self) -> None:
+        module = load_module(SPLITTER, "split_icon_sheet_comparison")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            icons = root / "icons"
+            icons.mkdir()
+            icon = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+            ImageDraw.Draw(icon).ellipse((12, 8, 52, 56), fill=(252, 252, 250, 255))
+            icon.save(icons / "001-test.png")
+            source = Image.new("RGBA", (80, 80), "white")
+            ImageDraw.Draw(source).ellipse((18, 12, 62, 68), fill=(252, 252, 250, 255), outline=(70, 150, 40, 255), width=2)
+            entries = [{
+                "index": 1,
+                "label": "test",
+                "file": "001-test.png",
+                "qa": {"selected_attempt": 1, "attempts": [{"attempt": 1, "source_box": [0, 0, 80, 80]}]},
+            }]
+            target = root / "qa-comparison.png"
+            module.save_qa_comparison(source, entries, icons, target)
+            with Image.open(target) as rendered:
+                self.assertEqual(rendered.width, 540)
+                self.assertGreater(rendered.height, 180)
+
     def test_quality_plans_45_as_five_nine_asset_sheets(self) -> None:
         module = load_module(PREPARE, "prepare_asset_pack")
         self.assertEqual(module.plan_batch_counts(45, 9), [9, 9, 9, 9, 9])
@@ -134,7 +173,8 @@ class AssetPipelineTests(unittest.TestCase):
                     "checks": {
                         "count": True, "order_and_semantics": True, "style_consistency": True,
                         "identity_consistency": True, "no_duplicates_or_omissions": True,
-                        "crop_and_alpha": True, "naming": True,
+                        "crop_and_alpha": True, "source_fidelity": True,
+                        "white_preservation": True, "naming": True,
                     },
                 }), encoding="utf-8")
                 batches.append({

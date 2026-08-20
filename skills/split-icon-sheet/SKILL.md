@@ -41,19 +41,23 @@ PYTHON scripts/split_icon_sheet.py \
   --out /absolute/path/output
 ```
 
-5. Compare the source image with `contact-sheet.png` using [the QA rubric](references/qa-rubric.md). When subagents are available, launch a fresh independent QA subagent with only the source image, contact sheet, detection debug image, and rubric; do not reveal expected failures.
-6. If QA finds a localized crop or naming error, write `overrides.json` and rerun with `--overrides`. Use one-based icon numbers:
+5. Compare every row of `qa-comparison.png`: source crop, checkerboard output, and output on navy/magenta. The colored panels are mandatory for detecting white parts that became transparent. Use [the QA rubric](references/qa-rubric.md). When subagents are available, launch a fresh independent QA subagent with only the source image, QA comparison, detection debug image, and rubric; do not reveal expected failures. A deterministic `pass` is not visual approval.
+6. If QA finds a localized crop, naming, or alpha error, write `overrides.json` and rerun with `--overrides`. Use `source_box` for crop errors. For a confirmed white-on-white semantic region, provide a tightly traced source-coordinate `protected_polygons`; never use a rectangular opaque patch:
 
 ```json
 {
   "icons": {
     "12": {"label": "消息通知"},
-    "37": {"source_box": [650, 320, 744, 397]}
+    "37": {"source_box": [650, 320, 744, 397]},
+    "4": {
+      "protected_polygons": [[[118, 183], [126, 132], [170, 98], [248, 96], [294, 132], [301, 181]]]
+    }
   }
 }
 ```
 
-7. Repeat extraction and QA for at most three iterations. Deliver `icons.zip` only when deterministic QA reports `pass` and visual QA passes. If an icon remains uncertain, leave the run in `needs_review`; never describe it as complete.
+7. Write a structured visual QA result with explicit `source_fidelity` and `white_preservation` checks. Repeat extraction and QA for at most three iterations. Deliver `icons.zip` only when deterministic QA and visual QA both pass. If an icon remains uncertain, leave the run in `needs_review`; never describe it as complete.
+8. For repeated production use, follow [the closed-loop improvement policy](references/self-improvement.md). Record failures and promote parameter or code changes only after regression tests pass; do not let one QA verdict rewrite global thresholds live.
 
 ## Understand the outputs
 
@@ -63,6 +67,7 @@ PYTHON scripts/split_icon_sheet.py \
 - `qa-report.json`: per-icon extraction attempts, clipping checks, component counts, preserved white-pixel counts, and publish status.
 - `detection-debug.png`: source image with numbered icon regions and OCR caption boxes.
 - `contact-sheet.png`: checkerboard preview for visual comparison.
+- `qa-comparison.png`: source/output comparison on checkerboard and high-contrast backgrounds; use this for white-preservation QA.
 - `icons.zip`: icons plus runtime mappings and QA report; debug previews stay outside the archive.
 
 ## Guardrails
@@ -70,6 +75,7 @@ PYTHON scripts/split_icon_sheet.py \
 - Detect each caption row independently. Never force a single global row/column grid.
 - For an unlabeled sheet, identify separated foreground objects and cluster their centers into reading-order rows. Use numbered names unless the user supplies an ordered labels file.
 - Remove background only when bright neutral pixels are connected to a local crop boundary. Keep enclosed white pixels opaque.
+- Treat white-on-white foreground as semantically ambiguous. Require source comparison, and use tightly scoped protected polygons or a semantic matting fallback after visual QA flags it.
 - Exclude captions geometrically below the icon region. Never globally erase every OCR text box because embedded icon text must survive.
 - Keep detached components unless they are tiny noise or a frame touching at least three crop sides.
 - Treat low-confidence OCR as a review condition, not a successful automatic name.
