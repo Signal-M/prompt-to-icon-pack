@@ -9,6 +9,8 @@
 
 [English](README.md) · [安装](#安装) · [支持的资产](#不只是-icon) · [平台兼容](#agent-平台兼容)
 
+当前实测数据：[1000 个 Icon 的 Alpha 基准与 25 个 Icon 成本模型](BENCHMARKS.md)。
+
 **Prompt to Asset Pack** 是从 `Prompt to Icon Pack` 升级而来的批量视觉资产生产流水线。它可以根据自然语言或角色参考图生成 Icon、Emoji、表情包、头像、徽章和游戏物品：先建立风格锚点并规划多张 Sheet，再进行非网格拆分、背景透明化、外部语义命名、单批与跨批 QA，最后输出 PNG、WebP、可选 SVG、工程映射和 ZIP。
 
 仓库名和 `$generate-icon-batch` 兼容入口会继续保留，避免旧提示词和安装方式失效。
@@ -45,6 +47,10 @@
 
 内置通用 UI 24/48、Emoji 反应、IP 表情、商店和运动主题。App 请求默认使用通用 UI；上传角色参考图则默认进入表情包模式，不会把所有模糊需求都武断地变成 Emoji。
 
+### 先查图库，再决定是否生成
+
+对于没有 IP / 参考图约束的通用 UI Icon，流水线会先从 Iconify 中配置的 Lucide、Material Symbols 等集合查找。高置信度匹配可以直接下载并清理为安全 SVG；有歧义的候选必须人工确认。没有匹配的部分再进入 Sheet 生成，或使用默认只做成本预演的 Recraft 原生 SVG 适配器。这样常见的“主页、搜索、设置”无需重复花钱生成，自定义资产仍保留完整生成能力。
+
 ### 不依赖严格网格
 
 拆分器检测真实前景对象并聚类成阅读顺序，不会把 AI 生成图简单平均切成固定小格。
@@ -52,6 +58,8 @@
 ### 不误删内部白色
 
 只移除与局部裁剪边界连通的亮色中性背景。眼白、衣服、帽子、网线、播放按钮和高光等内部白色仍保持不透明。
+
+遇到白帽子、白衣服等语义不明确区域时，可选 rembg 的 BiRefNet / SAM 候选会与边界法及保守融合结果一起比较。疑似白色误删现在会直接阻止发布，而不是只写一条警告；模型输出仍必须通过源图对照 QA。
 
 ### 名称来自需求，而不是重新猜图
 
@@ -162,10 +170,11 @@ exported/
 ```bash
 python3 -m pip install -r requirements.txt
 python3 -m pip install -r requirements-vector.txt  # 可选 SVG QA
+python3 -m pip install -r requirements-segmentation.txt  # 可选 BiRefNet / SAM 抠图候选
 ./scripts/validate.sh
 ```
 
-测试覆盖预设规划、45 个质量模式分批、48 个跨 Sheet 规划、表情文字渲染、PNG/WebP/雪碧图导出、SVG 安全清理、旧版兼容和多平台清单解析。
+测试覆盖图库路由、Recraft 付费前预演、语义 Alpha 融合、可复现回归集、预设与跨 Sheet 规划、导出、SVG 安全清理、旧版兼容和多平台清单。`BENCHMARKS.md` 来自 1000 个带真值 Alpha 的程序化样本，不是手写营销数字。
 
 ## 已知限制
 

@@ -19,6 +19,11 @@ EXPORT = ROOT / "skills/export-asset-pack/scripts/export_asset_pack.py"
 CAPTION = ROOT / "skills/generate-sticker-pack/scripts/render_sticker_text.py"
 VECTOR = ROOT / "skills/vectorize-asset-pack/scripts/vectorize_asset_pack.py"
 SPLITTER = ROOT / "skills/split-icon-sheet/scripts/split_icon_sheet.py"
+RESOLVE = ROOT / "skills/generate-asset-pack/scripts/resolve_icon_sources.py"
+RECRAFT = ROOT / "skills/generate-asset-pack/scripts/generate_with_recraft.py"
+PACKAGE_VECTOR = ROOT / "skills/generate-asset-pack/scripts/package_vector_route.py"
+CORPUS = ROOT / "benchmarks/generate_synthetic_corpus.py"
+BENCHMARK = ROOT / "benchmarks/run_alpha_benchmark.py"
 
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -35,6 +40,84 @@ def load_module(path: Path, name: str):
 
 
 class AssetPipelineTests(unittest.TestCase):
+    def test_conservative_union_restores_semantic_white_without_changing_rgb(self) -> None:
+        module = load_module(SPLITTER, "split_icon_sheet_union")
+        np = __import__("numpy")
+        source = Image.new("RGBA", (20, 20), (252, 252, 248, 255))
+        boundary = np.asarray(source, dtype="uint8").copy()
+        semantic = boundary.copy()
+        boundary[:, :, 3] = 0
+        semantic[:, :, 3] = 0
+        semantic[5:15, 6:14, 3] = 255
+        merged, report = module.conservative_alpha_union(source, boundary, semantic)
+        self.assertEqual(int(merged[10, 10, 3]), 255)
+        self.assertEqual(list(merged[10, 10, :3]), [252, 252, 248])
+        self.assertEqual(report["pixels_restored_from_semantic"], 80)
+
+    def test_library_first_offline_resolution_and_recraft_dry_run(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            plan = {
+                "project": "library-test", "asset_kind": "icon", "style": "rounded outline",
+                "reference_images": [],
+                "batches": [{"assets": [
+                    {"id": "asset-001-home", "label": "home", "description": "home"},
+                    {"id": "asset-002-trophy", "label": "trophy", "description": "trophy"},
+                ]}],
+            }
+            plan_path = root / "batch-plan.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            catalog = {
+                "search": {"home": ["lucide:home"], "trophy": ["lucide:award"]},
+                "svg": {"lucide:home": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 12L12 2l10 10v10H2z"/></svg>'},
+            }
+            catalog_path = root / "catalog.json"
+            catalog_path.write_text(json.dumps(catalog), encoding="utf-8")
+            resolved = root / "resolved"
+            run(str(RESOLVE), "--plan", str(plan_path), "--out", str(resolved), "--catalog", str(catalog_path), "--download")
+            report = json.loads((resolved / "library-resolution.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["accepted"], 1)
+            self.assertTrue((resolved / "svg/001-home.svg").exists())
+
+            recraft = root / "recraft"
+            run(str(RECRAFT), "--plan", str(plan_path), "--library-resolution", str(resolved / "library-resolution.json"), "--out", str(recraft))
+            provider_run = json.loads((recraft / "recraft-run.json").read_text(encoding="utf-8"))
+            self.assertEqual(provider_run["request_count"], 1)
+            self.assertEqual(provider_run["estimated_cost_usd"], 0.08)
+            (recraft / "svg").mkdir()
+            (recraft / "svg/001-trophy.svg").write_text(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 2h12v4c0 5-2 8-6 8S6 11 6 6z"/></svg>',
+                encoding="utf-8",
+            )
+            provider_run["status"] = "complete"
+            provider_run["outputs"] = [{"id": "asset-002-trophy", "label": "trophy", "file": "svg/001-trophy.svg"}]
+            (recraft / "recraft-run.json").write_text(json.dumps(provider_run), encoding="utf-8")
+            visual_qa = root / "vector-qa.json"
+            visual_qa.write_text(json.dumps({"status": "pass", "checks": {
+                "semantic_mapping": True, "style_consistency": True,
+                "license_review": True, "svg_safety": True,
+            }}), encoding="utf-8")
+            packaged = root / "vector-pack"
+            run(str(PACKAGE_VECTOR), "--plan", str(plan_path),
+                "--library-resolution", str(resolved / "library-resolution.json"),
+                "--recraft-run", str(recraft / "recraft-run.json"),
+                "--visual-qa", str(visual_qa), "--out", str(packaged))
+            self.assertTrue((packaged / "asset-pack-svg.zip").exists())
+            self.assertEqual(json.loads((packaged / "asset-map.json").read_text(encoding="utf-8"))["count"], 2)
+
+    def test_synthetic_benchmark_smoke(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            corpus = root / "corpus"
+            result = root / "result.json"
+            run(str(CORPUS), "--out", str(corpus), "--count", "16")
+            run(str(BENCHMARK), "--corpus", str(corpus), "--backend", "boundary", "--out", str(result))
+            metrics = json.loads(result.read_text(encoding="utf-8"))
+            self.assertEqual(metrics["corpus_count"], 16)
+            self.assertIn("false_publish_rate", metrics["summary"])
+            self.assertEqual(metrics["categories"]["white_cap_open_boundary"]["qa_pass_rate"], 0.0)
+            self.assertEqual(metrics["categories"]["detached_prop"]["qa_pass_rate"], 1.0)
+
     def test_protected_polygon_restores_only_reviewed_white_region(self) -> None:
         module = load_module(SPLITTER, "split_icon_sheet")
         source = Image.new("RGBA", (40, 40), (252, 252, 250, 255))

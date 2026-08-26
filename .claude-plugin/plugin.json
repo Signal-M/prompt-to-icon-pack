@@ -1,6 +1,6 @@
 {
   "name": "prompt-to-icon-pack",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Generate, split, QA, vectorize, and export coherent visual asset packs.",
   "author": {
     "name": "m2290526022-boop"

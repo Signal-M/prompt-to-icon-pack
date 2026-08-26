@@ -30,6 +30,19 @@ PYTHON scripts/split_icon_sheet.py \
 
 Leave the default `--mode auto` when uncertain. It tries caption detection first and falls back to unlabeled object detection only when no caption rows exist.
 
+The default alpha route is the dependency-free `boundary` method. For white hats, shirts, shoes, or other white-on-white character details, install the optional dependency and explicitly evaluate semantic and conservative-union candidates:
+
+```bash
+PYTHON scripts/split_icon_sheet.py \
+  --mode unlabeled \
+  --segmentation-backend ensemble \
+  --rembg-model birefnet-general-lite \
+  --image /absolute/path/icon-sheet.png \
+  --out /absolute/path/output
+```
+
+`--segmentation-backend sam` exposes the locally installed rembg SAM backend for reviewed cases. Model weights may download on first use. Do not treat any model as an automatic publish authority; the source comparison remains mandatory.
+
 The script uses macOS Vision for local Chinese/English OCR. If Vision is blocked by the sandbox, rerun the same command with user approval. It does not upload the image.
 
 4. Read `qa-report.json`. For a captioned sheet, if it reports uncertain OCR names, inspect the numbered `detection-debug.png` against the source, create a UTF-8 labels file with one corrected caption per icon in numbered reading order, and rerun:
@@ -76,6 +89,7 @@ PYTHON scripts/split_icon_sheet.py \
 - For an unlabeled sheet, identify separated foreground objects and cluster their centers into reading-order rows. Use numbered names unless the user supplies an ordered labels file.
 - Remove background only when bright neutral pixels are connected to a local crop boundary. Keep enclosed white pixels opaque.
 - Treat white-on-white foreground as semantically ambiguous. Require source comparison, and use tightly scoped protected polygons or a semantic matting fallback after visual QA flags it.
+- Treat detected `white_removed` risk as a hard deterministic failure. A semantic candidate can recover it, but cannot waive visual source-fidelity QA.
 - Exclude captions geometrically below the icon region. Never globally erase every OCR text box because embedded icon text must survive.
 - Keep detached components unless they are tiny noise or a frame touching at least three crop sides.
 - Treat low-confidence OCR as a review condition, not a successful automatic name.

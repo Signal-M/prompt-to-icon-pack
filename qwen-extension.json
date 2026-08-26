@@ -1,6 +1,6 @@
 {
   "name": "prompt-to-icon-pack",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "displayName": "Prompt to Asset Pack",
   "description": "Generate, split, QA, vectorize, and export coherent visual asset packs.",
   "skills": "skills"

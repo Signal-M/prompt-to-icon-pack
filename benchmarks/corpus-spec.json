@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "name": "white-safe-icon-alpha-1000",
+  "count": 1000,
+  "seed": 20260826,
+  "canvas_size": 128,
+  "categories": [
+    "white_cap_open_boundary",
+    "enclosed_white_detail",
+    "pale_foreground",
+    "true_transparent_hole",
+    "detached_prop",
+    "thin_white_detail",
+    "edge_highlight",
+    "ordinary_colored_icon"
+  ],
+  "license": "CC0-1.0",
+  "note": "Procedurally generated ground truth; no third-party artwork or model output."
+}

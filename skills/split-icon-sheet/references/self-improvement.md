@@ -23,8 +23,10 @@ Hash the source crop and keep artifact paths, parameters, QA verdict, and final 
 ## Offline promotion
 
 1. Turn confirmed failures into anonymized or synthetic regression fixtures.
-2. Measure false publish rate first, then recovery rate, edge quality, and runtime.
-3. Promote a new default only when it fixes the target cases without regressing the full corpus.
-4. Version the splitter policy and keep a rollback path.
+2. Generate the public 1,000-case corpus with `benchmarks/generate_synthetic_corpus.py`. Keep its seed, category distribution, backend/model identity, and thresholds in the result.
+3. Measure false publish rate first, then IoU, foreground recovery, white retention, background leakage, and runtime with `benchmarks/run_alpha_benchmark.py`.
+4. Promote a new default only when it fixes the target cases without regressing the full corpus. A lower false-publish rate takes priority over a higher apparent auto-pass rate.
+5. Rebuild `BENCHMARKS.md` from the result JSON. Never hand-edit a metric to improve marketing.
+6. Version the splitter policy and keep a rollback path.
 
 Prefer learned parameter selection from accumulated cases over live code rewriting. Human feedback and independent QA are labels; they are not permission to silently mutate global thresholds.

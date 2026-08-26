@@ -1,0 +1,23 @@
+{
+  "as_of": "2026-08-26",
+  "currency": "USD",
+  "sources": {
+    "recraft": "https://www.recraft.ai/pricing?tab=api",
+    "iconify": "https://iconify.design/docs/api/"
+  },
+  "providers": {
+    "iconify": {
+      "search_and_download": 0.0,
+      "billing_basis": "public API; individual icon-set licenses still apply"
+    },
+    "recraft": {
+      "recraftv4_1": 0.035,
+      "recraftv4_1_vector": 0.08,
+      "recraftv4_1_pro": 0.21,
+      "recraftv4_1_pro_vector": 0.3,
+      "vectorize": 0.01,
+      "remove_background": 0.01,
+      "billing_basis": "per generated image or utility request"
+    }
+  }
+}

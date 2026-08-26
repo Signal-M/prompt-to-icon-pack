@@ -1,0 +1,2 @@
+# Optional semantic background-removal backends. Model weights download on first use.
+rembg[cpu]>=2.0.69,<3

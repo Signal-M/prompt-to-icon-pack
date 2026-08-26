@@ -9,6 +9,8 @@
 
 [简体中文](README.zh-CN.md) · [Installation](#installation) · [Asset types](#one-engine-many-asset-types) · [Platforms](#agent-platforms)
 
+Current evidence: [1,000-icon alpha benchmark and 25-icon cost model](BENCHMARKS.md).
+
 **Prompt to Asset Pack** turns a brief or character reference into a production-oriented collection of icons, emoji, stickers, avatars, badges, or item sprites. It plans style-anchored sheets, detects assets without trusting a rigid grid, removes only the exterior background, assigns names from an external semantic specification, runs closed-loop per-sheet and cross-batch QA, and exports transparent PNG/WebP assets, optional SVG, mappings, previews, and ZIP packages.
 
 The repository keeps the original name `prompt-to-icon-pack` and the `$generate-icon-batch` compatibility entry point. The product and main skill now cover the larger prompt-to-assets workflow.
@@ -43,6 +45,10 @@ Large requests are split into complete sheets under one immutable style contract
 
 Bundled presets include universal UI sets, emoji reactions, character reactions, commerce, and sports. App requests default to UI concepts; character references default to reaction stickers. The system never blindly turns every unspecified request into emoji.
 
+### Library-first, generation second
+
+For generic UI icons without IP/reference constraints, the planner can search reviewed Iconify collections such as Lucide and Material Symbols first. Exact candidates are downloaded as sanitized SVG; ambiguous concepts remain review items. Unresolved icons can continue through sheet-first generation or a dry-run-first Recraft native SVG adapter. This avoids paying to regenerate a common `home`, `search`, or `settings` symbol while keeping custom visual work custom.
+
 ### No rigid-grid assumption
 
 AI rarely obeys pixel-perfect spacing. The splitter detects foreground objects and clusters them into reading order instead of dividing the canvas into equal rectangles.
@@ -50,6 +56,8 @@ AI rarely obeys pixel-perfect spacing. The splitter detects foreground objects a
 ### White-safe transparency
 
 Only bright neutral pixels connected to the local crop boundary become transparent. Enclosed white clothes, eyes, labels, highlights, play symbols, or racket strings remain opaque.
+
+For semantically ambiguous white-on-white regions, the splitter can compare boundary segmentation with optional rembg BiRefNet/SAM candidates and a conservative union. Suspected white removal is now a hard publish failure, not a warning. Every candidate still requires source-vs-alpha visual QA.
 
 ### Intent-based naming
 
@@ -94,8 +102,12 @@ The main skills are:
 ```mermaid
 flowchart LR
     A["Prompt or character reference"] --> B["Ordered asset spec"]
-    B --> C["Style contract + anchor"]
-    C --> D["Complete multi-sheet batches"]
+    B --> L["Library-first resolver"]
+    L -->|exact generic SVG| J
+    L -->|custom or unresolved| C["Style contract + provider route"]
+    C -->|editable vector| V["Native SVG generation"]
+    V --> J
+    C -->|raster / character| D["Complete multi-sheet batches"]
     D --> E["Non-grid detection"]
     E --> F["Boundary-connected transparency"]
     F --> G["Intent naming"]
@@ -200,6 +212,7 @@ exported/
 ```bash
 python3 -m pip install -r requirements.txt
 python3 -m pip install -r requirements-vector.txt  # optional SVG QA
+python3 -m pip install -r requirements-segmentation.txt  # optional BiRefNet/SAM alpha candidates
 ```
 
 ## Test
@@ -208,7 +221,7 @@ python3 -m pip install -r requirements-vector.txt  # optional SVG QA
 ./scripts/validate.sh
 ```
 
-The tests cover preset planning, 45-item quality batching, 48-item multi-sheet planning, caption rendering, PNG/WebP/sprite export, SVG sanitization, legacy compatibility, and platform manifest parsing.
+The tests cover library routing, Recraft dry runs, semantic alpha fusion, the generated regression corpus, preset planning, multi-sheet planning, exports, SVG sanitization, legacy compatibility, and platform manifests. `BENCHMARKS.md` is generated from a reproducible 1,000-case result rather than hand-written claims.
 
 ## Limitations
 

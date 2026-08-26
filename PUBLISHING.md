@@ -30,19 +30,19 @@ image-generation background-removal svg vectorization sprite-sheet design-tools
 
 ## Recommended next release
 
-- Version: `v0.6.0`
-- Title: `v0.6.0 — From icon sheets to complete visual asset packs`
+- Version: `v0.7.0`
+- Title: `v0.7.0 — Library-first SVG and benchmarked semantic alpha QA`
 
 Release highlights:
 
-- generic icons, emoji, stickers, avatars, badges, and item sprites;
-- 40–50+ asset planning with style anchors and density profiles;
-- preset UI, emoji, reaction, commerce, and sports collections;
-- character bible, identity QA, and reliable post-rendered sticker captions;
-- multi-size PNG/WebP, sprites, CSS, TypeScript, and ZIP export;
-- native/traced SVG with sanitization and render-back QA;
-- Codex, Claude Code, Qwen Code, WorkBuddy, and QwenWork packaging adapters;
-- backward compatibility with the original icon workflow.
+- library-first Iconify resolution with explicit semantic and license review;
+- dry-run-first Recraft V4.1 native SVG generation and reviewed cost estimates;
+- optional rembg BiRefNet/SAM alpha candidates plus conservative white-preserving fusion;
+- hard deterministic gating for suspected white-detail removal;
+- a reproducible CC0 1,000-icon alpha regression corpus;
+- generated quality and 25-icon cost metrics in `BENCHMARKS.md`;
+- reviewed mixed Iconify/Recraft SVG packaging;
+- backward compatibility with the original raster sheet workflow.
 
 ## Launch copy
 

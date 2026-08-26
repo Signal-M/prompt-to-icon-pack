@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import math
 import os
@@ -100,6 +101,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--size", type=int, default=256, help="Output canvas size")
     parser.add_argument("--padding", type=int, default=18, help="Transparent output padding")
     parser.add_argument("--max-attempts", type=int, default=3, choices=(1, 2, 3))
+    parser.add_argument(
+        "--segmentation-backend",
+        choices=("auto", "boundary", "birefnet", "sam", "ensemble"),
+        default="boundary",
+        help="Alpha backend. Use ensemble explicitly to compare optional semantic candidates.",
+    )
+    parser.add_argument(
+        "--rembg-model",
+        default="birefnet-general-lite",
+        help="rembg model for birefnet/ensemble; use a reviewed model available in the local rembg install",
+    )
     parser.add_argument(
         "--min-name-confidence",
         type=float,
@@ -482,6 +494,89 @@ def segment_foreground(
     }
 
 
+_REMBG_SESSIONS: dict[str, Any] = {}
+
+
+def rembg_available() -> bool:
+    try:
+        import rembg  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def segment_with_rembg(crop: Image.Image, model: str) -> tuple[np.ndarray, dict[str, Any]]:
+    """Run an optional semantic alpha model while retaining exact source RGB."""
+    try:
+        from rembg import new_session, remove
+    except ImportError as error:
+        raise RuntimeError(
+            "Semantic segmentation requires the optional rembg dependency. "
+            "Install requirements-segmentation.txt or use --segmentation-backend boundary."
+        ) from error
+    if model not in _REMBG_SESSIONS:
+        _REMBG_SESSIONS[model] = new_session(model)
+    result = remove(crop.convert("RGBA"), session=_REMBG_SESSIONS[model])
+    if isinstance(result, np.ndarray):
+        result = Image.fromarray(result)
+    elif isinstance(result, bytes):
+        result = Image.open(io.BytesIO(result))
+    elif not isinstance(result, Image.Image):
+        raise RuntimeError(f"Unsupported rembg result type: {type(result).__name__}")
+    semantic = np.asarray(result.convert("RGBA"), dtype=np.uint8)
+    source = np.asarray(crop.convert("RGBA"), dtype=np.uint8).copy()
+    source[:, :, 3] = semantic[:, :, 3]
+    return source, {
+        "method": "rembg",
+        "model": model,
+        "foreground_ratio": round(float((source[:, :, 3] >= 20).mean()), 6),
+    }
+
+
+def conservative_alpha_union(
+    source_crop: Image.Image, boundary: np.ndarray, semantic: np.ndarray
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Preserve pixels kept by either method; QA must reject resulting leakage."""
+    source = np.asarray(source_crop.convert("RGBA"), dtype=np.uint8).copy()
+    boundary_alpha = boundary[:, :, 3]
+    semantic_alpha = semantic[:, :, 3]
+    source[:, :, 3] = np.maximum(boundary_alpha, semantic_alpha)
+    disagreement = np.abs(boundary_alpha.astype(np.int16) - semantic_alpha.astype(np.int16))
+    return source, {
+        "method": "conservative_union",
+        "alpha_disagreement_ratio": round(float((disagreement >= 20).mean()), 6),
+        "pixels_restored_from_semantic": int(((boundary_alpha < 20) & (semantic_alpha >= 20)).sum()),
+    }
+
+
+def segmentation_candidates(
+    crop: Image.Image,
+    brightness_floor: int,
+    color_tolerance: int,
+    backend: str,
+    rembg_model: str,
+) -> list[tuple[str, np.ndarray, dict[str, Any]]]:
+    boundary, boundary_meta = segment_foreground(crop, brightness_floor, color_tolerance)
+    candidates = [("boundary", boundary, {"method": "boundary", **boundary_meta})]
+    effective = backend
+    if backend == "auto":
+        effective = "ensemble" if rembg_available() else "boundary"
+    if effective == "boundary":
+        return candidates
+    model = "sam" if effective == "sam" else rembg_model
+    semantic, semantic_meta = segment_with_rembg(crop, model)
+    if effective in {"birefnet", "sam"}:
+        return [(effective, semantic, semantic_meta)]
+    union, union_meta = conservative_alpha_union(crop, boundary, semantic)
+    # Prefer the semantic mask when it passes source-fidelity QA. Fall back to the
+    # conservative union for white preservation, then to the deterministic boundary mask.
+    return [
+        ("semantic", semantic, semantic_meta),
+        ("conservative_union", union, union_meta),
+        *candidates,
+    ]
+
+
 def restore_protected_polygons(
     rgba: np.ndarray,
     source_crop: Image.Image,
@@ -700,14 +795,27 @@ def qa_segment(
         & (source_i.min(axis=2) >= 238)
     )
     horizontal_interior = np.zeros_like(mask)
-    for y in range(height):
-        xs = np.where(mask[y])[0]
-        if len(xs) >= 2:
-            horizontal_interior[y, xs[0] : xs[-1] + 1] = True
+    # Fill the horizontal interior of each significant component separately. Using
+    # one span across all components falsely marks the white gap to a detached prop.
+    for component in significant:
+        by_y: dict[int, list[int]] = {}
+        for y, x in component.pixels:
+            by_y.setdefault(y, []).append(x)
+        for y, xs in by_y.items():
+            if len(xs) >= 2:
+                horizontal_interior[y, min(xs) : max(xs) + 1] = True
     suspicious_white = bright_neutral & ~mask & horizontal_interior
     suspicious_components = connected_components(suspicious_white)
     largest_suspicious = max((component.area for component in suspicious_components), default=0)
     white_removal_risk = largest_suspicious >= max(96, int(mask.sum() * 0.018))
+    if white_removal_risk:
+        issues.append(
+            {
+                "type": "white_removed",
+                "pixels": largest_suspicious,
+                "severity": 3,
+            }
+        )
     return {
         "passed": not issues,
         "issues": issues,
@@ -735,6 +843,8 @@ def attempt_icon(
     max_attempts: int,
     output_size: int,
     padding: int,
+    segmentation_backend: str,
+    rembg_model: str,
 ) -> tuple[Image.Image | None, dict[str, Any]]:
     configs = [
         {"expand": 0, "brightness_floor": 240, "color_tolerance": 14},
@@ -764,39 +874,66 @@ def attempt_icon(
             min(label_top - 1, y1 + expand),
         ]
         crop = source.crop(box)
-        rgba, segmentation = segment_foreground(
+        candidate_results = segmentation_candidates(
             crop,
             brightness_floor=config["brightness_floor"],
             color_tolerance=config["color_tolerance"],
+            backend=segmentation_backend,
+            rembg_model=rembg_model,
         )
-        restored = restore_protected_polygons(
-            rgba,
-            crop,
-            box,
-            record.get("protected_polygons"),
-        )
-        segmentation["protected_white_pixels_restored"] = restored
-        qa = qa_segment(rgba, crop, box, source.size, label_center, neighbor_centers)
-        attempt = {
-            "attempt": attempt_number,
-            "source_box": box,
-            "segmentation": segmentation,
-            "qa": qa,
-        }
-        attempts.append(attempt)
-        if bbox_from_alpha(rgba[:, :, 3]) is not None:
+        candidate_attempts = []
+        for candidate_name, candidate_rgba, segmentation in candidate_results:
+            rgba = candidate_rgba.copy()
+            restored = restore_protected_polygons(
+                rgba,
+                crop,
+                box,
+                record.get("protected_polygons"),
+            )
+            segmentation = dict(segmentation)
+            segmentation["protected_white_pixels_restored"] = restored
+            qa = qa_segment(rgba, crop, box, source.size, label_center, neighbor_centers)
+            candidate = {"name": candidate_name, "segmentation": segmentation, "qa": qa}
+            candidate_attempts.append(candidate)
+            if bbox_from_alpha(rgba[:, :, 3]) is None:
+                continue
             output = center_on_canvas(rgba, output_size, padding)
             score = sum(int(issue.get("severity", 1)) for issue in qa["issues"])
+            attempt = {
+                "attempt": attempt_number,
+                "source_box": box,
+                "selected_candidate": candidate_name,
+                "segmentation": segmentation,
+                "qa": qa,
+                "candidates": candidate_attempts,
+            }
             if best is None or score < best[0]:
                 best = (score, output, attempt)
             if qa["passed"]:
-                return output, {"passed": True, "selected_attempt": attempt_number, "attempts": attempts}
+                attempts.append(attempt)
+                return output, {
+                    "passed": True,
+                    "selected_attempt": attempt_number,
+                    "selected_candidate": candidate_name,
+                    "attempts": attempts,
+                }
+        attempts.append(
+            {
+                "attempt": attempt_number,
+                "source_box": box,
+                "selected_candidate": None,
+                "segmentation": {},
+                "qa": {"passed": False, "issues": []},
+                "candidates": candidate_attempts,
+            }
+        )
 
     if best is None:
         return None, {"passed": False, "selected_attempt": None, "attempts": attempts}
     return best[1], {
         "passed": False,
         "selected_attempt": best[2]["attempt"],
+        "selected_candidate": best[2].get("selected_candidate"),
         "attempts": attempts,
     }
 
@@ -996,6 +1133,8 @@ def main() -> int:
             args.max_attempts,
             args.size,
             args.padding,
+            args.segmentation_backend,
+            args.rembg_model,
         )
         filename = safe_filename(record["index"], record["label"])
         entry = {
@@ -1055,6 +1194,8 @@ def main() -> int:
         "status": "pass" if passed else "needs_review",
         "source": str(image_path),
         "detection_mode": detection_mode,
+        "segmentation_backend": args.segmentation_backend,
+        "rembg_model": args.rembg_model if args.segmentation_backend != "boundary" else None,
         "detection_details": detection_details,
         "caption_fallback_reason": caption_error,
         "detected_rows": row_counts,
