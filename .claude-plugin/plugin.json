@@ -3,8 +3,8 @@
   "version": "0.7.0",
   "description": "Generate, split, QA, vectorize, and export coherent visual asset packs.",
   "author": {
-    "name": "m2290526022-boop"
+    "name": "Signal-M"
   },
-  "repository": "https://github.com/m2290526022-boop/prompt-to-icon-pack",
+  "repository": "https://github.com/Signal-M/prompt-to-icon-pack",
   "license": "MIT"
 }

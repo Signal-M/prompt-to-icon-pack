@@ -104,7 +104,7 @@ asset_kind: icon | emoji | sticker | avatar | badge | item-sprite
 ## 安装
 
 ```bash
-git clone https://github.com/m2290526022-boop/prompt-to-icon-pack.git
+git clone https://github.com/Signal-M/prompt-to-icon-pack.git
 cd prompt-to-icon-pack
 
 python3 scripts/install-platform.py codex

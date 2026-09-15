@@ -2,7 +2,7 @@
 
 ## Repository identity
 
-- Repository: `m2290526022-boop/prompt-to-icon-pack`
+- Repository: `Signal-M/prompt-to-icon-pack`
 - Product display name: `Prompt to Asset Pack`
 - Tagline: `One prompt or character reference in. A coherent, named, transparent, QA-ready visual asset pack out.`
 - Suggested GitHub description:

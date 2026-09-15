@@ -3,11 +3,11 @@
   "version": "0.7.0",
   "description": "Generate, split, QA, vectorize, and export coherent visual asset packs from one prompt or character reference.",
   "author": {
-    "name": "m2290526022-boop",
-    "url": "https://github.com/m2290526022-boop"
+    "name": "Signal-M",
+    "url": "https://github.com/Signal-M"
   },
-  "homepage": "https://github.com/m2290526022-boop/prompt-to-icon-pack",
-  "repository": "https://github.com/m2290526022-boop/prompt-to-icon-pack",
+  "homepage": "https://github.com/Signal-M/prompt-to-icon-pack",
+  "repository": "https://github.com/Signal-M/prompt-to-icon-pack",
   "license": "MIT",
   "keywords": [
     "agent-skills",
@@ -22,10 +22,10 @@
     "displayName": "Prompt to Asset Pack",
     "shortDescription": "One prompt or IP image into a QA-ready visual asset pack.",
     "longDescription": "Resolve common icons from reviewed libraries, generate native SVG or coherent raster sheets, split irregular layouts with semantic alpha candidates, preserve internal white details, run benchmarked closed-loop QA, and export production packages.",
-    "developerName": "m2290526022-boop",
+    "developerName": "Signal-M",
     "category": "Design",
     "capabilities": ["Interactive", "Write"],
-    "websiteURL": "https://github.com/m2290526022-boop/prompt-to-icon-pack",
+    "websiteURL": "https://github.com/Signal-M/prompt-to-icon-pack",
     "defaultPrompt": [
       "Create a coherent 24-icon product asset pack from my brief.",
       "Turn my character reference into 24 transparent reaction stickers.",

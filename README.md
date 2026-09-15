@@ -148,7 +148,7 @@ Preserve internal white details, use the supplied ordered labels, and return a Z
 Clone once, then install the same canonical skills for the desired client:
 
 ```bash
-git clone https://github.com/m2290526022-boop/prompt-to-icon-pack.git
+git clone https://github.com/Signal-M/prompt-to-icon-pack.git
 cd prompt-to-icon-pack
 
 python3 scripts/install-platform.py codex
