@@ -13,15 +13,16 @@
 
 **Prompt to Asset Pack** 是从 `Prompt to Icon Pack` 升级而来的批量视觉资产生产流水线。它可以根据自然语言或角色参考图生成 Icon、Emoji、表情包、头像、徽章和游戏物品：先建立风格锚点并规划多张 Sheet，再进行非网格拆分、背景透明化、外部语义命名、单批与跨批 QA，最后输出 PNG、WebP、可选 SVG、工程映射和 ZIP。
 
-仓库名和 `$generate-icon-batch` 兼容入口会继续保留，避免旧提示词和安装方式失效。
+## 背景
+在做小程序ui优化时，直接用开源免费 icon 库比较丑，希望围绕ip形象和对应风格产出一套完整的icon素材库。分批生成成本高、风格一致性难把控而且还得逐个抠图命名导出。于是做了一个 skill，可以针对一整张icon图表，自动拆分、抠图、命名；后续又升级，直接将中间过程自动化，从 prompt 直接生成素材包，而且增加 qa 校验，针对切图问题会自动优化重新识别裁切
 
 ## 实际效果
 
 | 一次生成 | 自动拆分、透明化、命名和质检 |
 | --- | --- |
-| ![3x3 网球吉祥物资产表](examples/tennis-mini-program/generated-sheet.png) | ![透明资产联系表](examples/tennis-mini-program/contact-sheet.png) |
+<img width="1536" height="1024" alt="ChatGPT Image 2026年7月21日 03_09_28" src="https://github.com/user-attachments/assets/18b886ca-e3b1-4d97-b683-e1353845a2ee" />
 
-这个真实示例第一次拆分时发现扩音器右侧留白不足。系统没有直接输出 ZIP，而是通过 QA 拦截、局部扩大裁剪框并重新验证，最终只包装通过门禁的结果。
+<img width="2460" height="1730" alt="image" src="https://github.com/user-attachments/assets/0b99ff37-911a-445b-b628-7bf3d8711bbc" />
 
 ## 它解决什么问题
 
@@ -74,13 +75,6 @@
 
 最终 ZIP 必须同时通过确定性 QA、视觉语义 QA 和全局跨批次 QA。
 
-### SVG 不是简单描摹一切
-
-扁平、线性、纯色 Icon 可以使用原生语义 SVG；颜色较少的位图可以选择 VTracer 描摹。SVG 会被清理主动内容、限制路径数量和文件体积，再回渲染成 PNG 与原图对比。3D、毛发、玻璃、柔和阴影和复杂渐变如果不适合矢量化，就诚实保留位图。
-
-### 表情包文字不会再拼错
-
-模型只负责生成无字角色。拆分后再用真实字体添加“收到”“谢谢”“冲鸭”等文字，既可靠，也能单独切换语言。
 
 ## 不只是 Icon
 
@@ -181,8 +175,6 @@ python3 -m pip install -r requirements-segmentation.txt  # 可选 BiRefNet / SAM
 - 图片生成仍具有随机性，偶尔需要定向重试。
 - 风格锚点能提高一致性，但无法数学保证角色几何完全相同。
 - 毛发、烟雾、玻璃、半透明材质和共享场景仍是抠图难点。
-- 自动描摹 SVG 不等同于设计师手工制作的干净矢量源文件。
-- 第三方平台规范会变化，正式提交商店前应重新核对官方要求。
 
 如果它帮你省掉了一轮生成、切图、命名或 QA，欢迎点一个 Star，让更多开发者发现这个项目。
 
