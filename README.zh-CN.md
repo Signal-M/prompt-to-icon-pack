@@ -17,8 +17,8 @@
 
 | 一次生成 | 自动拆分、透明化、命名和质检 |
 | --- | --- |
-<img width="334" height="225" alt="ChatGPT Image 2026年7月21日 03_09_28" src="https://github.com/user-attachments/assets/18b886ca-e3b1-4d97-b683-e1353845a2ee" />
-<img width="414" height="290" alt="image" src="https://github.com/user-attachments/assets/0b99ff37-911a-445b-b628-7bf3d8711bbc" />
+<img width="334" height="223" alt="一次生成的 Icon Sheet 原图" src="docs/images/demo-generated-sheet.webp" />
+<img width="414" height="291" alt="自动拆分、透明化、命名后的 PNG 列表" src="docs/images/demo-split-named.webp" />
 
 ## 它解决什么问题
 
