@@ -1,15 +1,12 @@
 # Prompt to Asset Pack
 
-> 一句 Prompt 或一张 IP 参考图，生成整套风格一致、自动命名、透明背景、经过 QA 的视觉资产。
-
+> 批量生成整套风格一致、透明背景、自动命名、、经过QA校验的icon素材包。
 ![Agent Skills](https://img.shields.io/badge/Agent-Skills-111111)
 ![Codex Plugin](https://img.shields.io/badge/Codex-Plugin-111111)
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB)
 ![License MIT](https://img.shields.io/badge/License-MIT-2EA44F)
 
 [English](README.md) · [安装](#安装) · [支持的资产](#不只是-icon) · [平台兼容](#agent-平台兼容)
-
-当前实测数据：[1000 个 Icon 的 Alpha 基准与 25 个 Icon 成本模型](BENCHMARKS.md)。
 
 **Prompt to Asset Pack** 是从 `Prompt to Icon Pack` 升级而来的批量视觉资产生产流水线。它可以根据自然语言或角色参考图生成 Icon、Emoji、表情包、头像、徽章和游戏物品：先建立风格锚点并规划多张 Sheet，再进行非网格拆分、背景透明化、外部语义命名、单批与跨批 QA，最后输出 PNG、WebP、可选 SVG、工程映射和 ZIP。
 
@@ -177,6 +174,7 @@ python3 -m pip install -r requirements-segmentation.txt  # 可选 BiRefNet / SAM
 
 如果它帮你省掉了一轮生成、切图、命名或 QA，欢迎点一个 Star，让更多开发者发现这个项目。
 
+当前实测数据：[1000 个 Icon 的 Alpha 基准与 25 个 Icon 成本模型](BENCHMARKS.md)。
 ## License
 
 [MIT](LICENSE)
