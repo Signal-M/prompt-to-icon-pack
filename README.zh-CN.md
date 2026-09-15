@@ -20,9 +20,8 @@
 
 | 一次生成 | 自动拆分、透明化、命名和质检 |
 | --- | --- |
-<img width="1536" height="1024" alt="ChatGPT Image 2026年7月21日 03_09_28" src="https://github.com/user-attachments/assets/18b886ca-e3b1-4d97-b683-e1353845a2ee" />
-
-<img width="2460" height="1730" alt="image" src="https://github.com/user-attachments/assets/0b99ff37-911a-445b-b628-7bf3d8711bbc" />
+<img width="334" height="225" alt="ChatGPT Image 2026年7月21日 03_09_28" src="https://github.com/user-attachments/assets/18b886ca-e3b1-4d97-b683-e1353845a2ee" />
+<img width="414" height="290" alt="image" src="https://github.com/user-attachments/assets/0b99ff37-911a-445b-b628-7bf3d8711bbc" />
 
 ## 它解决什么问题
 
